@@ -1,46 +1,35 @@
-#include <stdbool.h>
-#include "util.h"
+#include "ms.h"
+//TODO : Create function to fill the disk with empty blocks and test it
+void InitializeDisk(FILE *ms ,Disk D){
 
+//initialiser le tableu d'allocation dynamiquement a partire des nombe de blocs utilisé
+bool * t = malloc(sizeof(bool)*D.blocks);
 
-void initialize(FILE *ms , int fb, int blocutil, disk Disk){
-
-bool t[blocutil];
 // initialiser facteur de blockage et nombre du block utilisés
-Disk.bf=fb;
-Disk.blocks=blocutil;
 
 rewind(ms);
-for (int i=0 ; i<blocutil ; i++){
+for (int i=0 ; i<D.blocks ; i++){
      t[i]=true; //initialiser les valeurs du tableau
 }
 
-fwrite(t, sizeof(bool), blocutil, ms); //ecrire les valeurs dans le fichier ms
+fwrite(t, sizeof(bool), D.blocks, ms); //ecrire les valeurs dans le fichier ms
 
- printf("Facteur de blocage: %d\n", Disk.bf);
-    printf("Nombre de blocs utilisés: %d\n", Disk.blocks);
-
+    /*printf("Facteur de blocage: %d\n", D.bf);
+    printf("Nombre de blocs utilisés: %d\n", D.blocks);*/
 
 }
 
+void InitializeBlock (Disk D,Block B) { //initialiser les blocks
+    B.student=malloc(sizeof(Student)*D.bf);
+    B.num=0;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-int main()
-{
-    printf("Hello world!\n");
-    return 0;
 }
+
+bool * ReadFAT (FILE *ms,int n) { // this function will read the file allocation table and return it for use
+    rewind(ms);
+    bool * b=malloc(sizeof(bool)*n);
+    fread(b,sizeof(bool),n,ms);
+    return b;
+
+}
+

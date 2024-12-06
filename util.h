@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct Student {
 	char name[20];
@@ -10,10 +11,10 @@ typedef struct Student {
 typedef struct Block {
 	Student *student;
 	int num;
-}block;
+}Block;
 
-typedef struct disk {
+typedef struct Disk {
 	int bf; //blocking factor
 	int blocks; //number of blocks used
-}disk;
+}Disk;
 
