@@ -10,7 +10,7 @@ bool * t = malloc(sizeof(bool)*D.blocks);
 rewind(ms);
 
 for (int i=0 ; i<D.blocks ; i++){
-     t[i]=true; //initialiser les valeurs du tableau
+     t[i]=false; //initialiser les valeurs du tableau
 
 }
 
