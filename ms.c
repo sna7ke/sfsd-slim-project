@@ -11,7 +11,7 @@ Disk.blocks=blocutil;
 
 rewind(ms);
 for (int i=0 ; i<blocutil ; i++){
-     t[i]=true; //initialiser les valeurs du tableau
+     t[i]=false; //initialiser les valeurs du tableau
 }
 
 fwrite(t, sizeof(bool), blocutil, ms); //ecrire les valeurs dans le fichier ms
@@ -22,15 +22,27 @@ fwrite(t, sizeof(bool), blocutil, ms); //ecrire les valeurs dans le fichier ms
 
 }
 
+//metre a jour tableau dallocation
+
+void Metajour(FILE *ms, int idbloc){
+  // idbloc = le numero de bloc qui a été modifier
+bool v=true;
+fseek(ms, idbloc*sizeof(bool), SEEK_SET);
+
+fwrite(&v, sizeof(bool), 1, ms);
+}
 
 
+//afficher tableau de allocation
 
+void affichertab(FILE *ms, int blocutil){
+bool t[blocutil];
 
-
-
-
-
-
+fread(t, sizeof(bool), blocutil, ms);
+for(int i =0; i<blocutil; i++){
+    printf("bloc : %d %s ", i, t[i] );
+}
+}
 
 
 
