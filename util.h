@@ -15,4 +15,5 @@ typedef struct Block {
 typedef struct disk {
 	int bf; //blocking factor
 	int blocks; //number of blocks used
-}
+}disk;
+
