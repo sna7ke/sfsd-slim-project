@@ -3,22 +3,22 @@
 
 void InitializeDisk(FILE *ms ,Disk D){
 
-    //initialiser le tableu d'allocation dynamiquement a partire des nombe de blocs utilisé
+    // Initialiser le tableau d'allocation dynamiquement à partir du nombre de blocs utilisé
     bool * t = malloc(sizeof(bool)*D.blocks);
 
     rewind(ms);
 
     for (int i=0 ; i<D.blocks ; i++){
-        t[i]=false; //initialiser les valeurs du tableau
+        t[i]=false; // Initialiser les valeurs du tableau
 
     }
 
-    fwrite(t, sizeof(bool), D.blocks, ms); //ecrire le tableu d'allocation de fichier dans le debut de la ms
+    fwrite(t, sizeof(bool), D.blocks, ms); // Ecrire le tableau d'allocation de fichier au debut de la MS
 
     Block buffer ;
     InitializeBlock(D,&buffer);
 
-    // ecrire les block selon le nombre que l'utilisateur définit
+    // Ecrire les blocks selon le nombre que l'utilisateur définit
     for(int i=0;i<D.blocks;i++) {
         //since the array of students varies on the blocking factor, we need to write the student's data directly
         fwrite(buffer.student,sizeof(Student),D.bf,ms);
@@ -31,10 +31,10 @@ void InitializeDisk(FILE *ms ,Disk D){
 }
 
 
-//metre a jour tableau dallocation
+// Mettre à jour tableau d'allocation
 
 void Metajour(FILE *ms, int idbloc){
-  // idbloc = le numero de bloc qui a été modifier
+  // idbloc = le numero du bloc qui a été modifié
 bool v=true;
 fseek(ms, idbloc*sizeof(bool), SEEK_SET);
 
