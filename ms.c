@@ -107,8 +107,6 @@ void Empty_MS (FILE *ms,Disk D){
         fwrite(&buffer.next,sizeof(int),1,ms);
 
     }
-
-
 }
 
 
@@ -116,7 +114,6 @@ int * checkFAT(FILE *ms, Disk D, int blocsFile,int Mode){ //blocsFile nombre de 
 
     int *Position =NULL; //pointer that i will return later and it will give out the position of the free block/blocks
     bool *t = ReadFAT(ms, D.blocks);
-
     int i=0;
     //if the mode is contiguose we start searching for adjaçant free blocks
     if (Mode==CONTIG_FILE) {
@@ -162,5 +159,29 @@ int * checkFAT(FILE *ms, Disk D, int blocsFile,int Mode){ //blocsFile nombre de 
 void offset (FILE *ms,Disk D, int Block_Number){
     fseek(ms,sizeof(bool)*D.blocks,SEEK_SET);
     fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_CUR);
+}
+
+
+int * Allocate_Block(FILE *ms,Disk D,int nbr_blocks) { // MANQUE DU CAS CHAINEE , POUR LE MOMENT ALLOCATION CONTIGUE SEULEMENT
+    // Verification du nombre de blocs demandés
+    if (nbr_blocks <= 0) {
+        printf("You should allocate at least 1 bloc.\n") ;
+        return NULL ;
+    }
+    // Recherche des blocks libres grâce au tableau FAT pour allocation contigue
+    int i = checkFAT(ms, D, nbr_blocks) ; // Indice du début des blocs contigus
+    if (i == -1) {
+        printf("Espace contigu insuffisant") ;
+        return NULL ;
+    }
+    // Tableau pour garder les numéros des blocks alloués
+        int *t = malloc(sizeof(int) * nbr_blocks) ;
+    //  Mise a jour de la FAT
+        for (int j = 0; j < nbr_blocks; j++) {
+            Update_FAT(ms, i + j, true) ;  // Marqué comme occupé
+            t[i] = i + j ;  // Ecriture de l'indice du bloc dans chaque case de t
+        }
+    printf("Allocation effectuée avec succés à partir du bloc n° %d.\n",i) ;
+    return t ;
 }
 
