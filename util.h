@@ -20,3 +20,4 @@ typedef struct Disk {
 	int blocks; //number of blocks used
 }Disk;
 
+

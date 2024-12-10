@@ -1,4 +1,6 @@
 #include "ms.h"
+#include <direct.h>
+#include <errno.h>
 //TODO : Create function to fill the disk with empty blocks and test it
 
 void InitializeDisk(FILE *ms ,Disk D){
@@ -82,5 +84,17 @@ void Display_Block(int Block_Number,FILE*ms,Disk D,Block * buffer) {
     fread(buffer->student,sizeof(Student),D.bf,ms);
     fread(buffer->num,sizeof(int),1,ms);
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
