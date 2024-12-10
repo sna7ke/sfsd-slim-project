@@ -81,7 +81,8 @@ void Display_Block(int Block_Number,FILE*ms,Disk D,Block * buffer) {
     rewind(ms);
     fseek(ms,sizeof(bool)*D.blocks,SEEK_SET);
     //this moves the cursor to the end of the file allocation table then we would start reading the blocks bellow it
-    fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_CUR);
+    //fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_CUR);
+    offset(ms,D,Block_Number);
     //this moves the cursor to the desired block
     fread(buffer->student,sizeof(Student),D.bf,ms);
     printf("read students");
@@ -111,29 +112,55 @@ void Empty_MS (FILE *ms,Disk D){
 }
 
 
-int checkFAT(FILE *ms, Disk D, int blocsFile){ //blocsFile nombre de blocs dans le fichier
+int * checkFAT(FILE *ms, Disk D, int blocsFile,int Mode){ //blocsFile nombre de blocs dans le fichier
 
- bool *t = ReadFAT(ms, D.blocks);
+    int *Position =NULL; //pointer that i will return later and it will give out the position of the free block/blocks
+    bool *t = ReadFAT(ms, D.blocks);
+
     int i=0;
-    while(i<D.blocks){
-        if(t[i]==false){
-            int j=0;
-            while (j<blocsFile && t[j]==false){
-                j++;
-            }
-            if(j>=blocsFile){
-                free(t);
-                return i;
+    //if the mode is contiguose we start searching for adjaçant free blocks
+    if (Mode==CONTIG_FILE) {
+
+        while(i<D.blocks){
+                //we found one element to now we start checking the adjaçant ones
+            if(t[i]==false){
+                int j=i;
+                while (j<blocsFile && t[j]==false && j<D.blocks){
+                    j++; //we increment j and we count as we find other free blocks
+                }
+                if(j>=blocsFile){
+                    free(t); //if the counter reaches the number of block files we want that means there is enough space for one to be had
+                    Position = malloc(sizeof(int));
+                    *Position =i
+                    return Position;
+                }
+                i=j;
+                    //else we'll continue looping through the array
+                }
+                i++;
             }
         }
-        i++;
+    else if(Mode==CHAINED_FILE) {
+            int k=0;
+            Position = malloc(sizeof(int)*blocsFile); //we allocate an array enough to hold all blocks
+        for(int i=0;i<D.blocks;i++){
+            if(t[i]==false){
+                Position[k]=i;
+                k++;
+            }
+            if(k>=blocsFile){
+                return Position;
+            }
+        }
     }
+
     free(t);
-    return -1;
+    return NULL;
 }
 
 
 void offset (FILE *ms,Disk D, int Block_Number){
-     fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_SET);
+    fseek(ms,sizeof(bool)*D.blocks,SEEK_SET);
+    fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_CUR);
 }
 

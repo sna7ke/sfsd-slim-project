@@ -18,7 +18,7 @@ int main(void) {
     printf("the number of blocks :");
     scanf("%d",&D.blocks);
     InitializeDisk(ms,D);
-    printf("give me the name of the file , how many blocks it is going to take , how many elements it is going to have , the global org, and the internal org \n");
+   /* printf("give me the name of the file , how many blocks it is going to take , how many elements it is going to have , the global org, and the internal org \n");
     scanf("%s",met.nomF);
     scanf("%d %d %d %d",&met.tailleEnBlock,&met.tailleEnRecord,&met.orgGlobal,&met.orgInterne);
     createMeta(ms,met);
@@ -29,7 +29,7 @@ int main(void) {
 
     printf("Mode d'organisation globale : %d\n", met.orgGlobal);
     printf("Mode d'organisation interne : %d\n", met.orgInterne);
-
+*/
     InitializeBlock(D,&buffer);
 
     for(int i=0;i<D.blocks;i++) {
