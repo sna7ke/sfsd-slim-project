@@ -2,7 +2,16 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
+#define CHAINED_FILE 1
+#define CONTIG_FILE 2
+
+#define ORDONE_FILE 1
+#define NONORDONE_FILE 2
+
 #pragma once
+
+
 
 typedef struct Student {
 	char name[20];
@@ -21,5 +30,13 @@ typedef struct Disk {
 	int bf; //blocking factor
 	int blocks; //number of blocks used
 }Disk;
+
+typedef struct Meta {
+    char nomF[20];
+    int tailleEnBlock; // Taille du fichier en blocs
+    int tailleEnRecord;// Taille du fichier en enregistrements
+    int orgGlobal;
+    int orgInterne;
+}Meta;
 
 

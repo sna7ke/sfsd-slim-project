@@ -1,5 +1,8 @@
 # sfsd-slim-project
 #### --> A simple file system simulator that emulates the functions of a real file system by applying the common functionalities on a binary file "secondary_memory.bin"
+### NOTE :
+main.c is a temporary file to test what we have done so far , it will be removed/edited constantly but its just a test
+
 
 ## TO DO LIST :
 
@@ -8,9 +11,9 @@
 - [x] **Function "InitializeDisk"** : Nbr total de blocs + Facteur de blockage (all blocks are free in start) ;
 - [x] **Function "Metajour"** : Mise à jour d'état des blocks aprés chaque opération ;
 - [x] **Function "InitializeBlock"** :
-- [] **Function "ReadFAT"** : Lire et retourne tableau d'allocation de fichier ;
+- [x] **Function "ReadFAT"** : Lire et retourne tableau d'allocation de fichier ;
 - [] **Function "Compacting"** : Compactage des fichiers sur le disque sans laisser d'espace entre eux ;
-- [] **Function "EmptyMS"** : Vider complétement la mémoire secondaire (effacer toutes les données du disque) ;
+- [x] **Function "EmptyMS"** : Vider complétement la mémoire secondaire (effacer toutes les données du disque) ;
 - [] **Function "GestionStockage"** *(A UTILISER AVANT CHAQUE OPERATION D'ENTREE/SORTIE)* : Verif si assez de blocks libres dispo. Si non : compactage. Si MS full : afficher message ;
 **_Notes : Table d'allocation stockée au début de la MS (premier bloc) / Numérotation des blocks à partir de 0._**
 

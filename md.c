@@ -1,37 +1,29 @@
-#include "util.h"
-
+#include "md.h"
+//TODO : the current functions only work with one metadata in mind , once we add more files it stops working , one of you should update it to be flexible
 void createMeta(FILE *ms, Meta mymeta){
-
-
     fseek(ms, 0, SEEK_END);
     fwrite(&mymeta, sizeof(Meta), 1, ms);
-    }
+}
 
 
-    void readMeta(FILE *ms){
+Meta readMeta(FILE *ms){
     Meta meta;
+    // we move the cursor to the metadata in the MS , then we read it
     fseek(ms, -sizeof(Meta), SEEK_END);
     fread(&meta, sizeof(Meta), 1, ms);
-
-    printf("Nom du fichier : %s\n", meta.nomF);
-    printf("Taille en blocs : %d\n", meta.tailleEnBlock);
-    printf("Taille en enregistrements : %d\n", meta.tailleEnRecord);
-
-    printf("Mode d'organisation globale : %s\n", meta.orgGlobal);
-    printf("Mode d'organisation interne : %s\n", meta.orgInterne);
-
-    }
+    return meta;
+}
 
 
 
-    void majmeta(FILE *ms, int newBlocks, int newRecords){
+void majmeta(FILE *ms, int newBlocks, int newRecords){
     Meta meta;
-    fseek(ms, -sizeof(Meta), SEEK_END);
-    fread(&meta, sizeof(Meta), 1, ms);
+    fseek(ms,-sizeof(Meta), SEEK_END);
+    fread(&meta,sizeof(Meta), 1, ms);
     meta.tailleEnBlock = newBlocks;
     meta.tailleEnRecord = newRecords;
-    fseek(ms, -sizeof(Meta), SEEK_CUR);
+    fseek(ms,-sizeof(Meta),SEEK_CUR);
     fwrite(&meta, sizeof(Meta), 1, ms);
     printf("Métadonnées mises à jour avec succès.\n");
-    }
+}
 

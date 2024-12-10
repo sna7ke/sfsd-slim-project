@@ -1,7 +1,7 @@
 #include "ms.h"
-#include <direct.h>
-#include <errno.h>
-//TODO : Create function to fill the disk with empty blocks and test it
+
+//TODO : create function to allocate blocks on the ms and test it
+// TODO : test the Empty_MS function once you allocate blocks to see if the ms gets empty or not
 
 void InitializeDisk(FILE *ms ,Disk D){
 
@@ -36,9 +36,8 @@ void InitializeDisk(FILE *ms ,Disk D){
 
 // Mettre à jour tableau d'allocation
 
-void Update_FAT(FILE *ms, int idbloc){
+void Update_FAT(FILE *ms, int idbloc, bool v){
   // idbloc = le numero du bloc qui a été modifié
-bool v=true;
 fseek(ms, idbloc*sizeof(bool), SEEK_SET);
 
 fwrite(&v, sizeof(bool), 1, ms);
@@ -92,16 +91,21 @@ void Display_Block(int Block_Number,FILE*ms,Disk D,Block * buffer) {
     printf("read the next");
 }
 
+void Empty_MS (FILE *ms,Disk D){
+    //set all the blocks to be free
+    for(int i=0;i<D.blocks;i++){
+        Update_FAT(ms,i,false);
+    }
+    Block buffer;
+    InitializeBlock(D,&buffer);
+    //we initialize the buffer here to hold dummy empty values to write them on the ms
+     for(int i=0;i<D.blocks;i++) {
+        //since the array of students varies on the blocking factor, we need to write the student's data directly
+        fwrite(buffer.student,sizeof(Student),D.bf,ms);
+        fwrite(&buffer.num,sizeof(int),1,ms);
+        fwrite(&buffer.next,sizeof(int),1,ms);
+
+    }
 
 
-
-
-
-
-
-
-
-
-
-
-
+}
