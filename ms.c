@@ -158,30 +158,3 @@ int * Allocate_Block(FILE *ms,Disk D,int nbr_blocks) { // MANQUE DU CAS CHAINEE 
     return t ;
 }
 
-
-int checkFAT(FILE *ms, Disk D, int blocsFile){ //blocsFile nombre de blocs dans le fichier
-
- bool *t = ReadFAT(ms, D.blocks);
-    int i=0;
-    while(i<D.blocks){
-        if(t[i]==false){
-            int j=0;
-            while (j<blocsFile && t[j]==false){
-                j++;
-            }
-            if(j>=blocsFile){
-                free(t);
-                return i;
-            }
-        }
-        i++;
-    }
-    free(t);
-    return -1;
-}
-
-
-void offset (FILE *ms,Disk D, int Block_Number){
-     fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_SET);
-}
-
