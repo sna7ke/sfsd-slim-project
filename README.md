@@ -7,7 +7,7 @@ main.c is a temporary file to test what we have done so far , it will be removed
 ## TO DO LIST :
 
 ### 1.Mémoire secondaire MS :
-- [] **Mode d'organisation chainée ou contigue (choix de l'utilisateur lors de création du fichier)** ;
+- [x] **Mode d'organisation chainée ou contigue (choix de l'utilisateur lors de création du fichier)** ;
 - [x] **Function "InitializeDisk"** : Nbr total de blocs + Facteur de blockage (all blocks are free in start) ;
 - [x] **Function "Metajour"** : Mise à jour d'état des blocks aprés chaque opération ;
 - [x] **Function "InitializeBlock"** :
@@ -18,11 +18,11 @@ main.c is a temporary file to test what we have done so far , it will be removed
 **_Notes : Table d'allocation stockée au début de la MS (premier bloc) / Numérotation des blocks à partir de 0._**
 
 ### 2.Fichiers de données :
-- [] **Definir organisation Globale** : Contigue ou Chainée ;
-- [] **Définir organisation Interne** : Triée ou Non-Triée ;
+- [x] **Definir organisation Globale** : Contigue ou Chainée ;
+- [x] **Définir organisation Interne** : Triée ou Non-Triée ;
 - [] **Function "FillFile"** : Fonction qui remplit automatiquement les données des fichiers ;
 - [] **Function "CreateFile"** : Nom / Nombres de records / Mode d'orga globale et interne ;
-- [] **Function "LoadFile"** : Allocations de blocks en MS / Block contient des records d'un seul fichier seulement ;
+- [x] **Function "LoadFile"** : Allocations de blocks en MS / Block contient des records d'un seul fichier seulement ;
 - [] **Function "InsertNewStudent"** : Insertion d'un nouvel enregistrement en fonction du mode d'organisation global/interne ;
 - [] **Function "SearchStudentID"** : *(Pour tout les modes d'orga)* Retourne position de l'enregistrement sous forme (NumBloc,Déplacement). Si enreg n'existe pas: afficher message. ;
 - [] **Function "DeleteStudentLogic"** : Suppression logique d'un enregistrement ;

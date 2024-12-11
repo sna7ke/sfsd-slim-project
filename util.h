@@ -35,6 +35,7 @@ typedef struct Meta {
     char nomF[20];
     int tailleEnBlock; // Taille du fichier en blocs
     int tailleEnRecord;// Taille du fichier en enregistrements
+    Block *adress1stBlock ;
     int orgGlobal;
     int orgInterne;
 }Meta;

@@ -9,4 +9,4 @@ void Empty_MS (FILE *ms,Disk D);
 int* checkFAT(FILE *ms, Disk D, int blocsFile,int Mode);
 void offset (FILE *ms,Disk D, int Block_Number);
 int *Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode);
-
+void LoadFile(FILE *ms, Disk D, const char *fileName) ;

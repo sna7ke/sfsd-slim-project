@@ -128,7 +128,7 @@ int * checkFAT(FILE *ms, Disk D, int blocsFile,int Mode){ //blocsFile nombre de 
                 if(j>=blocsFile){
                     free(t); //if the counter reaches the number of block files we want that means there is enough space for one to be had
                     Position = malloc(sizeof(int));
-                    *Position =i
+                    *Position =i ;
                     return Position;
                 }
                 i=j;
@@ -231,6 +231,41 @@ int *Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode) {
 }
 
 
+void LoadFile(FILE *ms, Disk D, const char *fNom) { // I'm not sure if i should read buffer.next in contiguous organisation but i put it in case , please remove it if i shouldn't (line 253 for now)
+    // Lire les métadonnées
+    Meta fMeta ;
+    fMeta = readMeta(ms);
+    // Chercher le fichier dans la MS
+    if (strncmp(fMeta.nomF, fNom, sizeof(fMeta.nomF)) != 0) {
+        printf("Le fichier '%s' n'existe pas dans la MS.\n", fNom);
+        return;
+    }
+
+    // Initialiser une structure pour stocker les blocs chargés
+    Block buffer;
+    InitializeBlock(D, &buffer);
+
+    if (fMeta.orgGlobal == CONTIG_FILE) { // Si organisation contigue
+        int start = fMeta.adress1stBlock->num;
+        for (int i = 0; i < fMeta.tailleEnBlock; i++) {
+            offset(ms, D, start + i); // Aller au bloc correspondant
+            fread(buffer.student, sizeof(Student), D.bf, ms);
+            fread(&buffer.num, sizeof(int), 1, ms);
+            fread(&buffer.next, sizeof(int), 1, ms);
+        }
+    } else if (fMeta.orgGlobal == CHAINED_FILE) { // Si organisation chainée
+        int pos = fMeta.adress1stBlock->num ; // Position pendant le parcous
+        while (pos != -1) {
+            offset(ms, D, pos);
+            fread(buffer.student, sizeof(Student), D.bf, ms); // Lire les étudiants
+            fread(&buffer.num, sizeof(int), 1, ms);
+            fread(&buffer.next, sizeof(int), 1, ms);
+            pos = buffer.next;
+        }
+    }
+    free(buffer.student);
+    printf("Loading Successful.\n");
+}
 
 
 
