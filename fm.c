@@ -43,26 +43,4 @@ for (int i = 0; i < d.bf; i++) {
 printf("\nLe buffer a été rempli avec %d étudiants.\n", buffer.num);
 return  buffer;
 }
-int main() {
-    int bf = 3;
-    Block buffer;
-    Disk disk = { bf, 100 };
-    FILE *ms = fopen("datafile.bin", "wb+");
 
-    if (!ms) {
-        printf("Erreur: Impossible d'ouvrir le fichier.\n");
-        return 1;
-    }
-
-
-   buffer= fillBuffer( disk);
-    printf("\nDonnées dans le buffer :\n");
-    for (int i = 0; i < buffer.num; i++) {
-        printf("Étudiant %d : Nom = %s, ID = %d, Groupe = %d, Supprimé = %s\n",
-               i + 1,
-               buffer.student[i].name,
-               buffer.student[i].ID,
-               buffer.student[i].group,
-               buffer.student[i].deleted ? "Oui" : "Non");
-    }
-}
