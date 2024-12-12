@@ -29,6 +29,7 @@ typedef struct Block {
 typedef struct Disk {
 	int bf; //blocking factor
 	int blocks; //number of blocks used
+	int nbrFiles ; // total number of files
 }Disk;
 
 typedef struct Meta {

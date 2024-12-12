@@ -29,6 +29,9 @@ void InitializeDisk(FILE *ms ,Disk D){
 
     }
 
+    // Initialiser le nombre de fichiers à 0 de base
+    D.nbrFiles = 0;
+
     free(buffer.student);
 
 }
@@ -118,7 +121,7 @@ int * checkFAT(FILE *ms, Disk D, int blocsFile,int Mode){ //blocsFile nombre de 
     bool *t = ReadFAT(ms, D.blocks);
 
     int i=0;
-    //if the mode is contiguose we start searching for adjaçant free blocks
+    //if the mode is contiguous we start searching for adjaçant free blocks
     if (Mode==CONTIG_FILE) {
            // printf("contiguous \n");
         while(i<D.blocks){
@@ -180,11 +183,11 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode) {
 
         // Mise à jour de la FAT et enregistrement des blocs alloués
         for (int j = 0; j < nbr_blocks; j++) {
-                printf("%d \n",*i+j);
+            printf("%d \n",*i+j);
             Update_FAT(ms, *i + j, true);
         }
 
-        printf("sucessful allocation  %d.\n", *i);
+        printf("successful contiguous allocation  %d.\n", *i);
         free(i);
         return;
         //return t;
@@ -193,9 +196,9 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode) {
         // Recherche des blocs non contigus
         int *positions = checkFAT(ms, D, nbr_blocks, CHAINED_FILE);
         if (!positions) {
-            printf("Espace insuffisant pour une allocation chaînée.\n");
+            printf("Not enough space for chained allocation.\n");
             free(positions);
-            return NULL;
+            return;
         }
 
         // Mise à jour de la FAT et enregistrement des blocs alloués
@@ -211,7 +214,7 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode) {
             }
         }
 
-        printf("Allocation chaînée effectuée avec succès.\n");
+        printf("Successful chained allocation.\n");
         free(positions);
         return;
     }
