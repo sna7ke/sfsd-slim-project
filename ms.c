@@ -107,6 +107,8 @@ void Empty_MS (FILE *ms,Disk D){
         fwrite(&buffer.next,sizeof(int),1,ms);
 
     }
+
+
 }
 
 
@@ -114,30 +116,37 @@ int * checkFAT(FILE *ms, Disk D, int blocsFile,int Mode){ //blocsFile nombre de 
 
     int *Position =NULL; //pointer that i will return later and it will give out the position of the free block/blocks
     bool *t = ReadFAT(ms, D.blocks);
+
     int i=0;
     //if the mode is contiguose we start searching for adjaçant free blocks
     if (Mode==CONTIG_FILE) {
-
+           // printf("contiguous \n");
         while(i<D.blocks){
                 //we found one element to now we start checking the adjaçant ones
             if(t[i]==false){
+                //printf("the value i found to be false is :%d \n",i);
                 int j=i;
-                while (j<blocsFile && t[j]==false && j<D.blocks){
+                int counter=0;
+                while (t[j]==false && j<D.blocks){
                     j++; //we increment j and we count as we find other free blocks
+                    counter++;
+                  //  printf("counter value : %d \n",counter);
                 }
-                if(j>=blocsFile){
+                if(counter>=blocsFile){
                     free(t); //if the counter reaches the number of block files we want that means there is enough space for one to be had
                     Position = malloc(sizeof(int));
-                    *Position =i ;
+                    *Position =i;
                     return Position;
                 }
                 i=j;
                     //else we'll continue looping through the array
                 }
                 i++;
+               // printf("the outer i is equal to : %d \n",i);
             }
         }
     else if(Mode==CHAINED_FILE) {
+            printf("CHAINED \n");
             int k=0;
             Position = malloc(sizeof(int)*blocsFile); //we allocate an array enough to hold all blocks
         for(int i=0;i<D.blocks;i++){
@@ -150,8 +159,9 @@ int * checkFAT(FILE *ms, Disk D, int blocsFile,int Mode){ //blocsFile nombre de 
             }
         }
     }
-
+    free(Position);
     free(t);
+    printf("failed failure\n");
     return NULL;
 }
 
@@ -161,77 +171,54 @@ void offset (FILE *ms,Disk D, int Block_Number){
     fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_CUR);
 }
 
-int *Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode) {
-    // Verification du nombre de blocs demandés
-    if (nbr_blocks <= 0) {
-        printf("You should allocate at least 1 block.\n");
-        return NULL;
-    }
 
-    // Tableau pour les numéros des blocs alloués
-    int *t = malloc(sizeof(int) * nbr_blocks);
-    if (!t) {
-        printf("ereure dans l'alocation memoire .\n");
-        return NULL;
-    }
+void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode) {
 
     if (mode == CONTIG_FILE) {
-        // Recherche des blocs contigus
+        // Getting the adjaçant blocks from the checkFAT function
         int *i = checkFAT(ms, D, nbr_blocks, CONTIG_FILE);
-        if (!i ) {
-            printf("Espace contigu insuffisant.\n");
-            free(t);
-            return NULL;
-        }
 
         // Mise à jour de la FAT et enregistrement des blocs alloués
         for (int j = 0; j < nbr_blocks; j++) {
+                printf("%d \n",*i+j);
             Update_FAT(ms, *i + j, true);
-            t[j] = *i + j;
         }
 
-        printf("Allocation effectuée avec succès à partir du bloc n° %d.\n", *i);
+        printf("sucessful allocation  %d.\n", *i);
         free(i);
-        return t;
+        return;
+        //return t;
 
     } else if (mode == CHAINED_FILE) {
         // Recherche des blocs non contigus
         int *positions = checkFAT(ms, D, nbr_blocks, CHAINED_FILE);
         if (!positions) {
             printf("Espace insuffisant pour une allocation chaînée.\n");
-            free(t);
+            free(positions);
             return NULL;
         }
 
         // Mise à jour de la FAT et enregistrement des blocs alloués
+
         for (int j = 0; j < nbr_blocks; j++) {
             Update_FAT(ms, positions[j], true);
-            t[j] = positions[j];
-
             // Mettre à jour le pointeur 'next' du bloc précédent
             if (j > 0) {
-                offset(ms, D, t[j - 1]);
-                fwrite(&t[j], sizeof(int), 1, ms);
+                offset(ms, D, positions[j-1]);
+                fseek(ms,sizeof(Student)*D.bf,SEEK_CUR);
+                fseek(ms,sizeof(int),SEEK_CUR);
+                fwrite(&positions[j],sizeof(int),1,ms);
             }
         }
 
-        // Mettre à jour le dernier bloc pour indiquer la fin de la chaîne
-        offset(ms, D, t[nbr_blocks - 1]);
-        int fin = -1;
-        fwrite(&fin, sizeof(int), 1, ms);
-
         printf("Allocation chaînée effectuée avec succès.\n");
         free(positions);
-        return t;
+        return;
     }
-
-    printf("Mode d'allocation inconnu.\n");
-    free(t);
-    return NULL;
 }
 
 
-void LoadFile(FILE *ms, Disk D, const char *fNom) { // I'm not sure if i should read buffer.next in contiguous organisation but i put it in case , please remove it if i shouldn't (line 253 for now)
+/*void LoadFile(FILE *ms, Disk D, const char *fNom) { // I'm not sure if i should read buffer.next in contiguous organisation but i put it in case , please remove it if i shouldn't (line 253 for now)
     // Lire les métadonnées
     Meta fMeta ;
     fMeta = readMeta(ms);
@@ -266,7 +253,4 @@ void LoadFile(FILE *ms, Disk D, const char *fNom) { // I'm not sure if i should 
     free(buffer.student);
     printf("Loading Successful.\n");
 }
-
-
-
-
+*/

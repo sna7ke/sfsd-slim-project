@@ -42,16 +42,14 @@ int main(void) {
 
     }
 
-
-   /* buffer =Display_Block(0,ms,D);
-    printf("these are the info of block 0 \n");
-    printf("it has %d elements \n",buffer.num);
-
-    for (int i=0; i<2;i++) {
-        printf("student : %d \n",i);
-        printf("name : %s ID :%d groupe : %d",buffer.student[i].name,buffer.student[i].ID,buffer.student[i].group);
-    }*/
     b=ReadFAT(ms,D.blocks);
+    Update_FAT(ms,0,true);
+    Update_FAT(ms,2,true);
+    Update_FAT(ms,3,true);
+    //Update_FAT(ms,1,true);
+
+
+
 
 
     /*for(int i=0;i<D.blocks;i++) {
@@ -62,8 +60,46 @@ int main(void) {
     */
     b=ReadFAT(ms,D.blocks);
      for(int i=0;i<D.blocks;i++) {
-        printf("block number %d is : %d",i,b[i]);
+        printf("block number %d is : %d\n",i,b[i]);
     }
+
+    int * Position=NULL;
+    Position=checkFAT(ms,D,2,CHAINED_FILE);
+    printf("%p \n",Position);
+    if(Position==NULL){
+        printf("it works \n");
+    }
+
+    //this prints the values after a contiguous allocation
+
+    else {
+        /*for(int i=0;i<2;i++) {
+        printf("block number %d is : %d\n",*Position+i,b[i+*Position]);
+    }*/
+    Allocate_Block(ms,D,2,CHAINED_FILE);
+
+    b=ReadFAT(ms,D.blocks);
+
+    for(int i=0;i<D.blocks;i++) {
+        printf("block number %d is : %d\n",i,b[i]);
+    }
+        for (int i=0;i<2;i++) {
+        printf("the block : %d is : %d \n",Position[i],b[Position[i]]);
+        }
+
+         for(int i=0;i<D.blocks;i++) {
+        Display_Block(i,ms,D,&buffer);
+        printf("the block number %d : \n",i);
+        for(int j=0;j<D.bf;j++){
+            printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
+        }
+        printf("the next block is %d \n",buffer.next);
+
+    }
+
+    }
+
+    free(b);
     fclose(ms);
     free(buffer.student);
     return 0;
