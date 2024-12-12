@@ -1,4 +1,4 @@
-#include "fm.h"
+#include "Fm.h"
 Block fillBuffer(Disk d) {
     Block buffer;
 
@@ -76,3 +76,28 @@ void CreateFile(FILE *ms, Disk D) { // PAS ENCORE FINIE
     createMeta(ms, fMeta);
 }
 
+
+bool fileExists(FILE *ms, Disk D, const char* fName) {
+
+    // Déplacer le curseur à la fin du fichier pour accéder aux métadonnées
+    fseek(ms, 0, SEEK_END);
+
+    // Parcourir toutes les métadonnées pour vérifier si le nom existe déjà
+    for (int i = D.nbrFiles - 1; i >= 0; i--) {
+        long pos = ftell(ms) - sizeof(Meta) * (D.nbrFiles - i); // Position des métadonnées du fichier actuel
+        fseek(ms, pos, SEEK_SET);
+        Meta fMeta;
+        fread(&fMeta, sizeof(Meta), 1, ms);  // Lire les métadonnées du fichier actuel
+
+        // Comparer le nom du fichier avec celui recherché
+        if (strcmp(fMeta.nomF, fName) == 0) {
+            printf("The file already exists.\n", fName);
+            return true;  // Le fichier existe
+            break ;
+        }
+    }
+
+    // Si aucun fichier n'a le même nom
+    printf("The file does not exist.\n", fName);
+    return false;
+}
