@@ -1,4 +1,8 @@
-#include "Fm.h"
+#include "fm.h"
+#include "md.h"
+
+//TODO : there is a small memory issue which we could optimize , instead of doing checkfat inside allocate block we could do it once outside and pass taht array as argument for allocate block
+
 Block fillBuffer(Disk d) {
     Block buffer;
 
@@ -45,46 +49,59 @@ return  buffer;
 }
 
 
-void creatFile (FILE *ms, Disk D, int nombreDeRecord, int mode ){
-Meta mymeta;
+void creatFile (FILE *ms, Disk *D){
+    //NOTE : THIS FUNCTION'S STRUCTURE IS TEMPORARY UNTIL WE WORK ON THE GUI
+Meta meta;
+ // Demander nom du fichier
+    printf("File Name : "); // Temporaire avant l'implémentation de l'interface graphique
+    scanf("%s", meta.nomF);
+    // Demander nombre de records
+    printf("Number of records : ");
+    scanf("%d", &meta.tailleEnRecord);
+    // Calcul du nombre de blocs
+    meta.tailleEnBlock = ( (meta.tailleEnRecord/D->bf)+1 );
+    // Demande du mode d'organisation global
+    printf("Choose global organisation mode ( 1:CHAINED_FILE / 2:CONTIGUOUS_FILE ) : ");
+    scanf("%d", &meta.orgGlobal);
+    // Demande du mode d'organisation interne
+    printf("Choose intern organisation mode ( 1:ORDONE_FILE / 2:NONORDONE_FILE ) : ");
+    scanf("%d", &meta.orgInterne);
+    // position du fichier
+    meta.position=D->nbrFiles+1;
 
-int nbBlock = (nombreDeRecord/D.bf)+1; //calculer le nombre de block
-int * space = checkFAT(ms, D, nbBlock,mode);
+        //int nbBlock = (nombreDeRecord/D.bf)+1; //calculer le nombre de block
+        printf("org global : %d \n",meta.orgGlobal);
+int * space = checkFAT(ms, *D, meta.tailleEnBlock,meta.orgGlobal);
 
 if(space == NULL){
     printf("ERREUR !!!");
 }else{
 
-    Allocate_Block(ms, D, nbBlock, mode);
-    initMeta(mymeta, D);
-    createMeta(ms, mymeta); //creer un fichier de metadonnee pour ce fichier
-    // initialize meta
+
+    Allocate_Block(ms, *D, meta.tailleEnBlock,meta.orgGlobal,&meta);
+
+    createMeta(ms, meta); //creer un fichier de metadonnee pour ce fichier
+    D->nbrFiles++;
     free(space);
 }
 }
 
 
 bool fileExists(FILE *ms, Disk D, const char* fName) {
-
-    // Déplacer le curseur à la fin du fichier pour accéder aux métadonnées
-    fseek(ms, 0, SEEK_END);
-
+    Meta met;
     // Parcourir toutes les métadonnées pour vérifier si le nom existe déjà
-    for (int i = D.nbrFiles - 1; i >= 0; i--) {
-        long pos = ftell(ms) - sizeof(Meta) * (D.nbrFiles - i); // Position des métadonnées du fichier actuel
-        fseek(ms, pos, SEEK_SET);
-        Meta fMeta;
-        fread(&fMeta, sizeof(Meta), 1, ms);  // Lire les métadonnées du fichier actuel
+    for (int i =0 ; i <D.nbrFiles ; i++) {
+        met=readMeta(ms,D,i+1);
 
-        // Comparer le nom du fichier avec celui recherché
-        if (strcmp(fMeta.nomF, fName) == 0) {
-            printf("The file already exists.\n", fName);
-            return true;  // Le fichier existe
-            break ;
+        if(strcmp(met.nomF,fName)==0) {
+            printf("FILE FOUND \n");
+            return true;
         }
+
     }
 
+
     // Si aucun fichier n'a le même nom
-    printf("The file does not exist.\n", fName);
+    printf("The file does not exist.\n");
     return false;
 }

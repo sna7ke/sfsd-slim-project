@@ -175,11 +175,14 @@ void offset (FILE *ms,Disk D, int Block_Number){
 }
 
 
-void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode) {
+void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
 
     if (mode == CONTIG_FILE) {
         // Getting the adjaçant blocks from the checkFAT function
         int *i = checkFAT(ms, D, nbr_blocks, CONTIG_FILE);
+
+        //we will update the meta data's first block adress
+        met->adress1stBlock=i[0];
 
         // Mise à jour de la FAT et enregistrement des blocs alloués
         for (int j = 0; j < nbr_blocks; j++) {

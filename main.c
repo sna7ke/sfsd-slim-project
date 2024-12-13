@@ -1,9 +1,10 @@
 #include "ms.h"
 #include "md.h"
+#include "fm.h"
 
 int main(void) {
     FILE * ms;
-    Meta met;
+    Meta meta;
     Disk D;
     bool * b;
     Block buffer;
@@ -17,19 +18,30 @@ int main(void) {
     scanf("%d",&D.bf);
     printf("the number of blocks :");
     scanf("%d",&D.blocks);
+    D.nbrFiles=0;
     InitializeDisk(ms,D);
-   /* printf("give me the name of the file , how many blocks it is going to take , how many elements it is going to have , the global org, and the internal org \n");
-    scanf("%s",met.nomF);
-    scanf("%d %d %d %d",&met.tailleEnBlock,&met.tailleEnRecord,&met.orgGlobal,&met.orgInterne);
-    createMeta(ms,met);
-    readMeta(ms);
-    printf("Nom du fichier : %s\n", met.nomF);
-    printf("Taille en blocs : %d\n", met.tailleEnBlock);
-    printf("Taille en enregistrements : %d\n", met.tailleEnRecord);
 
-    printf("Mode d'organisation globale : %d\n", met.orgGlobal);
-    printf("Mode d'organisation interne : %d\n", met.orgInterne);
-*/
+
+    creatFile(ms,&D);
+    b=ReadFAT(ms,D.blocks);
+       b=ReadFAT(ms,D.blocks);
+     for(int i=0;i<D.blocks;i++) {
+        printf("block number %d is : %d\n",i,b[i]);
+    }
+
+    meta=readMeta(ms,D,1);
+
+
+
+    printf("Nom du fichier : %s\n", meta.nomF);
+    printf("Taille en blocs : %d\n", meta.tailleEnBlock);
+    printf("Taille en enregistrements : %d\n", meta.tailleEnRecord);
+
+    printf("Mode d'organisation globale : %d\n", meta.orgGlobal);
+    printf("Mode d'organisation interne : %d\n", meta.orgInterne);
+
+    printf("position of the file is : %d \n",meta.position);
+
     InitializeBlock(D,&buffer);
 
     for(int i=0;i<D.blocks;i++) {
@@ -42,10 +54,10 @@ int main(void) {
 
     }
 
-    b=ReadFAT(ms,D.blocks);
-    Update_FAT(ms,0,true);
-    Update_FAT(ms,2,true);
-    Update_FAT(ms,3,true);
+    fileExists(ms,D,"chahi");
+
+
+
     //Update_FAT(ms,1,true);
 
 
@@ -58,25 +70,22 @@ int main(void) {
     printf(" \n");
     Metajour(ms,1);
     */
-    b=ReadFAT(ms,D.blocks);
-     for(int i=0;i<D.blocks;i++) {
-        printf("block number %d is : %d\n",i,b[i]);
-    }
 
-    int * Position=NULL;
+
+    /*int * Position=NULL;
     Position=checkFAT(ms,D,2,CHAINED_FILE);
     printf("%p \n",Position);
     if(Position==NULL){
         printf("it works \n");
-    }
+    }*/
 
     //this prints the values after a contiguous allocation
 
-    else {
+    //else {
         /*for(int i=0;i<2;i++) {
         printf("block number %d is : %d\n",*Position+i,b[i+*Position]);
     }*/
-    Allocate_Block(ms,D,2,CHAINED_FILE);
+   /* Allocate_Block(ms,D,2,CHAINED_FILE);
 
     b=ReadFAT(ms,D.blocks);
 
@@ -97,7 +106,7 @@ int main(void) {
 
     }
 
-    }
+    }*/
 
     free(b);
     fclose(ms);
