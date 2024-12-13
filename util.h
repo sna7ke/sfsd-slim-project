@@ -32,6 +32,7 @@ typedef struct Disk {
 	int nbrFiles ; // total number of files
 }Disk;
 
+
 typedef struct Meta {
     char nomF[20];
     int tailleEnBlock; // Taille du fichier en blocs
@@ -39,6 +40,7 @@ typedef struct Meta {
     int adress1stBlock ;
     int orgGlobal;
     int orgInterne;
+    int position;
 }Meta;
 
 

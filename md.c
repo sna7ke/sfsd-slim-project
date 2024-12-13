@@ -1,58 +1,57 @@
-#include "Md.h"
+#include "md.h"
 //TODO : the current functions only work with one metadata in mind , once we add more files it stops working , one of you should update it to be flexible
+
+
+void initMeta(Meta meta, Disk D){
+
+    // Demander nom du fichier
+    printf("File Name : "); // Temporaire avant l'implémentation de l'interface graphique
+    scanf("%s", meta.nomF);
+    // Demander nombre de records
+    printf("Number of records : ");
+    scanf("%d", meta.tailleEnRecord);
+    // Calcul du nombre de blocs
+    meta.tailleEnBlock = ( (meta.tailleEnRecord/D.bf)+1 );
+    // Demande du mode d'organisation global
+    printf("Choose global organisation mode ( 1:CONTIG_FILE / 2:CHAINED_FILE ) : ");
+    scanf("%d", meta.orgGlobal);
+    // Demande du mode d'organisation interne
+    printf("Choose intern organisation mode ( 1:ORDONE_FILE / 2:NONORDONE_FILE ) : ");
+    scanf("%d", meta.orgInterne);
+    // position du fichier
+    printf("position du fichier : ");
+    scanf("%d", meta.position);
+
+}
+
+
 void createMeta(FILE *ms, Meta mymeta){
     fseek(ms, 0, SEEK_END);
     fwrite(&mymeta, sizeof(Meta), 1, ms);
 }
 
 
-Meta* readMeta(FILE *ms, Disk D) { // La fonction retourne un tableau ou sont stockées les métadonnées de chaque fichier
-    Meta* fMeta = (Meta*)malloc(D.nbrFiles * sizeof(Meta));
-
-    // Déplacer le curseur à la fin du fichier
-    fseek(ms, 0, SEEK_END);
-
-    // Lire les métadonnées depuis la fin du fichier
-    for (int i = D.nbrFiles - 1; i >= 0; i--) {
-        long pos = ftell(ms) - sizeof(Meta); // Calculer la position des métadonnées
-        fseek(ms, pos, SEEK_SET);  // Se déplacer à pos
-        fread(&fMeta[i], sizeof(Meta), 1, ms); // Lire les métadonnées
-    }
-
-    return fMeta;  // Retourner le tableau de métadonnées
+Meta readMeta(FILE *ms, Disk D ,int pos){
+    Meta meta;
+    // we move the cursor to the position of metadata in the MS , then we read it
+    fseek(ms, -(D.nbrFiles-pos+1)*sizeof(Meta), SEEK_END);
+    fread(&meta, sizeof(Meta), 1, ms);
+    return meta;
 }
 
 
 
-void majmeta(FILE *ms, Disk D, const char* fName, int newBlocks, int newRecords) { // Si nous ne voulons pas changer le nom du fichier , intialisez newName a NULL
-    if (fName == NULL || strlen(fName) == 0) { // Verification de la validité du nom du fichier
-        printf("The name of the file is empty.\n");
-        return;
-    }
+void majmeta(FILE *ms, Disk D, Meta newMeta, int pos){
+   Meta meta;
+    fseek(ms, -(D.nbrFiles-pos+1)*sizeof(Meta), SEEK_END);
+    fread(&meta,sizeof(Meta), 1, ms);
+    //changer les informations necessaires
+    meta.tailleEnBlock = newMeta.tailleEnBlock;
+    meta.tailleEnRecord = newMeta.tailleEnRecord;
+    meta.nomF[20] = newMeta.nomF[20];
 
-    bool found = false;
-    fseek(ms, 0, SEEK_END); // Déplacer le curseur à la fin du fichier
-    for (int i = D.nbrFiles - 1; i >= 0; i--) { // Parcourir les métadonnées du fichier
-        long pos = ftell(ms) - sizeof(Meta); // Calculer la position de la strucutre Meta
-        fseek(ms, pos, SEEK_SET);  // Se déplacer à la position des métadonnées du fichier actuel
-        Meta fMeta;
-        fread(&fMeta, sizeof(Meta), 1, ms); // Lire les métadonnées
-
-        // Vérifier si le nom du fichier correspond
-        if (strcmp(fMeta.nomF, fName) == 0) {
-            // Mettre à jour les métadonnées
-            fMeta.tailleEnBlock = newBlocks;
-            fMeta.tailleEnRecord = newRecords;
-            }
-            // Revenir à la position pour réécrire les métadonnées mises à jour
-            fseek(ms, pos, SEEK_SET);
-            fwrite(&fMeta, sizeof(Meta), 1, ms); // Réécrire les métadonnées
-            found = true;
-            break; // Arrêter la recherche après avoir trouvé le fichier
-        }
-
-
-    if (!found) {
-        printf("File with name '%s' not found.\n", fName);
-    }
+    fseek(ms,-sizeof(Meta),SEEK_CUR);
+    fwrite(&meta, sizeof(Meta), 1, ms);
+    printf("Métadonnées mises à jour avec succès.\n");
 }
+
