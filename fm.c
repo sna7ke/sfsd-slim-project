@@ -59,7 +59,11 @@ Meta meta;
     printf("Number of records : ");
     scanf("%d", &meta.tailleEnRecord);
     // Calcul du nombre de blocs
-    meta.tailleEnBlock = ( (meta.tailleEnRecord/D->bf)+1 );
+    if ( meta.tailleEnRecord % D->bf ==0 ){
+        meta.tailleEnBlock =  meta.tailleEnRecord/D->bf ;
+    }else{
+        meta.tailleEnBlock = ( (meta.tailleEnRecord/D->bf)+1 );
+    }
     // Demande du mode d'organisation global
     printf("Choose global organisation mode ( 1:CHAINED_FILE / 2:CONTIGUOUS_FILE ) : ");
     scanf("%d", &meta.orgGlobal);
@@ -87,24 +91,33 @@ if(space == NULL){
 }
 
 
-bool fileExists(FILE *ms, Disk D, const char* fName) {
+int fileExists(FILE *ms, Disk D, int pos) {
     Meta met;
     // Parcourir toutes les métadonnées pour vérifier si le nom existe déjà
     for (int i =0 ; i <D.nbrFiles ; i++) {
         met=readMeta(ms,D,i+1);
 
-        if(strcmp(met.nomF,fName)==0) {
+        if(met.position = pos) {
             printf("FILE FOUND \n");
-            return true;
+        return pos;
         }
-
     }
-
-
     // Si aucun fichier n'a le même nom
     printf("The file does not exist.\n");
-    return false;
+    return -1;
 }
+
+
+
+
+
+
+
+
+
+
+
+/*
 void insertStudent(FILE *ms, Disk *D, Student newStudent, Meta *meta) {
     Block buffer;
     buffer.num = 0;
@@ -314,3 +327,5 @@ void insertStudent(FILE *ms, Disk *D, Student newStudent, Meta *meta) {
         }
     }
 }
+*/
+

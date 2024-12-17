@@ -224,39 +224,55 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
 }
 
 
-/*void LoadFile(FILE *ms, Disk D, const char *fNom) { // I'm not sure if i should read buffer.next in contiguous organisation but i put it in case , please remove it if i shouldn't (line 253 for now)
+void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buffer.next in contiguous organisation but i put it in case , please remove it if i shouldn't (line 253 for now)
     // Lire les métadonnées
-    Meta fMeta ;
-    fMeta = readMeta(ms);
-    // Chercher le fichier dans la MS
-    if (strncmp(fMeta.nomF, fNom, sizeof(fMeta.nomF)) != 0) {
+    Meta fMeta;
+    int start;
+    fMeta = readMeta(ms,D , pos);
+  // Chercher le fichier dans la MS
+
+
+ /*   if (strncmp(fMeta.nomF, fNom, sizeof(fMeta.nomF)) != 0) {
         printf("Le fichier '%s' n'existe pas dans la MS.\n", fNom);
         return;
     }
+*/
 
     // Initialiser une structure pour stocker les blocs chargés
     Block buffer;
     InitializeBlock(D, &buffer);
+    Display_Block( fMeta.adress1stBlock, ms, D, &buffer);
 
     if (fMeta.orgGlobal == CONTIG_FILE) { // Si organisation contigue
-        int start = fMeta.adress1stBlock->num;
+         start = fMeta.adress1stBlock;
+
         for (int i = 0; i < fMeta.tailleEnBlock; i++) {
             offset(ms, D, start + i); // Aller au bloc correspondant
-            fread(buffer.student, sizeof(Student), D.bf, ms);
-            fread(&buffer.num, sizeof(int), 1, ms);
-            fread(&buffer.next, sizeof(int), 1, ms);
+            Display_Block(start, ms, D, &buffer);
+            printf("the block number %d : \n",i);
+            for(int j=0;j<fMeta.tailleEnRecord;j++){
+
+                printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
+            }
+            printf("the next block is %d \n",buffer.next);
+
         }
     } else if (fMeta.orgGlobal == CHAINED_FILE) { // Si organisation chainée
-        int pos = fMeta.adress1stBlock->num ; // Position pendant le parcous
-        while (pos != -1) {
-            offset(ms, D, pos);
-            fread(buffer.student, sizeof(Student), D.bf, ms); // Lire les étudiants
-            fread(&buffer.num, sizeof(int), 1, ms);
-            fread(&buffer.next, sizeof(int), 1, ms);
-            pos = buffer.next;
+        int i = 0;
+          start = fMeta.adress1stBlock; // Position pendant le parcous
+        while (start != -1 && i < fMeta.tailleEnBlock) {
+            offset(ms, D, start);
+            Display_Block(start, ms, D, &buffer);
+            printf("the block number %d : \n", i);
+            for(int j=0;j<D.bf;j++){
+                printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
+            }
+            printf("the next block is %d \n",buffer.next);
+            start = buffer.next;
+            i++;
         }
     }
     free(buffer.student);
     printf("Loading Successful.\n");
 }
-*/
+
