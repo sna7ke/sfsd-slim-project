@@ -224,6 +224,9 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
 }
 
 
+
+
+
 void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buffer.next in contiguous organisation but i put it in case , please remove it if i shouldn't (line 253 for now)
     // Lire les métadonnées
     Meta fMeta;
@@ -243,6 +246,8 @@ void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buff
     InitializeBlock(D, &buffer);
     Display_Block( fMeta.adress1stBlock, ms, D, &buffer);
 
+            int rec = fMeta.tailleEnRecord; //condition necessaire pour arreter la boucle j
+
     if (fMeta.orgGlobal == CONTIG_FILE) { // Si organisation contigue
          start = fMeta.adress1stBlock;
 
@@ -250,13 +255,16 @@ void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buff
             offset(ms, D, start + i); // Aller au bloc correspondant
             Display_Block(start, ms, D, &buffer);
             printf("the block number %d : \n",i);
-            for(int j=0;j<fMeta.tailleEnRecord;j++){
+            int j=0;
+            while ( j< D.bf && j<rec){
 
                 printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
+                j++;
             }
             printf("the next block is %d \n",buffer.next);
+            rec = rec - (i+1)*D.bf ;
+       }
 
-        }
     } else if (fMeta.orgGlobal == CHAINED_FILE) { // Si organisation chainée
         int i = 0;
           start = fMeta.adress1stBlock; // Position pendant le parcous
@@ -264,11 +272,15 @@ void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buff
             offset(ms, D, start);
             Display_Block(start, ms, D, &buffer);
             printf("the block number %d : \n", i);
-            for(int j=0;j<D.bf;j++){
-                printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
+             int j =0;
+             while ( j< D.bf && j<rec){
+
+            printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
+            j++;
             }
             printf("the next block is %d \n",buffer.next);
-            start = buffer.next;
+            start = &buffer.next;
+            rec = rec - (i+1)*D.bf ;
             i++;
         }
     }

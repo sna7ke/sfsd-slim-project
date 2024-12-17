@@ -59,7 +59,7 @@ Meta meta;
     printf("Number of records : ");
     scanf("%d", &meta.tailleEnRecord);
     // Calcul du nombre de blocs
-    if ( meta.tailleEnRecord % D->bf ==0 ){
+    if ( meta.tailleEnRecord % D->bf == 0 ){
         meta.tailleEnBlock =  meta.tailleEnRecord/D->bf ;
     }else{
         meta.tailleEnBlock = ( (meta.tailleEnRecord/D->bf)+1 );
@@ -78,7 +78,7 @@ Meta meta;
 int * space = checkFAT(ms, *D, meta.tailleEnBlock,meta.orgGlobal);
 
 if(space == NULL){
-    printf("ERREUR !!!");
+    printf("ERREUR f creat !!! \n");
 }else{
 
 
@@ -91,15 +91,19 @@ if(space == NULL){
 }
 
 
-int fileExists(FILE *ms, Disk D, int pos) {
+
+
+
+
+int fileExists(FILE *ms, Disk D, char fName[20]) {
     Meta met;
     // Parcourir toutes les métadonnées pour vérifier si le nom existe déjà
     for (int i =0 ; i <D.nbrFiles ; i++) {
         met=readMeta(ms,D,i+1);
 
-        if(met.position = pos) {
+        if( strcmp( met.nomF, fName) == 0) {
             printf("FILE FOUND \n");
-        return pos;
+            return met.position;
         }
     }
     // Si aucun fichier n'a le même nom
