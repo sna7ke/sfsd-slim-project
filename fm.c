@@ -333,3 +333,55 @@ void insertStudent(FILE *ms, Disk *D, Student newStudent, Meta *meta) {
 }
 */
 
+void deleteFile(FILE *ms, Disk *D, char fName[20]) {
+    int pos = fileExists(ms, *D, fName); // Verification de l'existance du fichier
+    if (pos == -1) {
+        printf("The file '%s' does not exist.\n", fName);
+        return;
+    }
+    Meta meta = readMeta(ms, *D, pos); // Lecture des métadonnées
+
+    // Suppression des blocs alloués au fichier
+    Block defaultBlock;
+    InitializeBlock(*D, &defaultBlock); // Bloc initialisé aux valeurs par défait
+    if (meta.orgGlobal == CONTIG_FILE) {
+        printf("Re-initializing blocks (Contiguous organization)...\n");
+        for (int i = 0; i < meta.tailleEnBlock; i++) {
+            offset(ms, *D, meta.adress1stBlock + i); // Déplacer le curseur au bloc spécifique
+            // Réinitialiser le bloc en écrivant un bloc vide
+            fwrite(defaultBlock.student, sizeof(Student), D->bf, ms);
+            fwrite(&defaultBlock.num, sizeof(int), 1, ms);
+            fwrite(&defaultBlock.next, sizeof(int), 1, ms);
+
+            // Mettre à jour la FAT pour libérer le bloc
+            Update_FAT(ms, meta.adress1stBlock + i, false);
+        }
+    } else if (meta.orgGlobal == CHAINED_FILE) {
+        printf("Re-Initializing (Chained organization)...\n");
+        int currentBlock = meta.adress1stBlock;
+        Block buffer;
+
+        while (currentBlock != -1) {
+            offset(ms, *D, currentBlock);
+            fread(&buffer, sizeof(Block), 1, ms);
+
+            // Réinitialiser le bloc en écrivant un bloc vide
+            offset(ms, *D, currentBlock);
+            fwrite(defaultBlock.student, sizeof(Student), D->bf, ms);
+            fwrite(&defaultBlock.num, sizeof(int), 1, ms);
+            fwrite(&defaultBlock.next, sizeof(int), 1, ms);
+            Update_FAT(ms, currentBlock, false); // Mettre à jour la FAT pour libérer le bloc
+            currentBlock = buffer.next; // Passage au bloc suivant
+        }
+    }
+    // Suppression des métadonnées
+    if (D->nbrFiles > 1 && pos != D->nbrFiles) {
+        Meta lastMeta = readMeta(ms, *D, D->nbrFiles); // Lire la dernière métadonnée
+        lastMeta.position = pos; // Mettre à jour sa position
+        fseek(ms, -(D->nbrFiles - pos + 1) * sizeof(Meta), SEEK_END); // Aller à la position de la métadonnée supprimée
+        fwrite(&lastMeta, sizeof(Meta), 1, ms); // Écrire la dernière métadonnée à la place
+    }
+
+    D->nbrFiles--; // Diminution du nombre de fichiers par 1
+    printf("File named '%s' deleted succesfully.\n", fName);
+}

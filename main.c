@@ -55,6 +55,8 @@ int main(void) {
     }
 
     fileExists(ms,D,"chahi");
+    deleteFile(ms,&D,"chahi");
+    fileExists(ms,D,"chahi");
 
 
 
