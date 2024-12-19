@@ -385,3 +385,74 @@ void deleteFile(FILE *ms, Disk *D, char fName[20]) {
     D->nbrFiles--; // Diminution du nombre de fichiers par 1
     printf("File named '%s' deleted succesfully.\n", fName);
 }
+
+
+int binarySearch(Student *students, int numRecords, int ID) { // Fonction de recherche dichotomique (division du tableau par 2 à chaque recherche pour but d'optimisation)
+    int start = 0, end = numRecords - 1;
+
+    // Vérification de si l'ID est en dehors de l'intervalle
+    if (ID < students[start].ID || ID > students[end].ID) {
+        return -1; // L'ID est en dehors de l'intervalle
+
+    while (start <= end) {
+        int mid = start + (end - start) / 2;
+        if (students[mid].ID == ID) {
+            return mid; // Étudiant trouvé
+        }
+        if (students[mid].ID < ID) {
+            start = mid + 1;
+        } else {
+            end = mid - 1;
+        }
+    }
+    return -1; // Étudiant non trouvé
+    }
+}
+
+posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
+    Block buffer;
+    InitializeBlock(D, &buffer); // Initialisation du buffer
+    posStudent pos;
+    pos.numBlock = -1;      // Valeurs par défaut si l'étudiant n'est pas trouvé
+    pos.deplacement = -1;
+
+    if (meta.orgInterne == ORDONE_FILE) {
+        if (meta.orgGlobal == CONTIG_FILE) {
+            for (int blockNum = 0; blockNum < meta.tailleEnBlock; blockNum++) {
+                offset(ms, D, meta.adress1stBlock + blockNum); // Aller au bloc nécessaire
+                fread(&buffer.num, sizeof(int), 1, ms); // Lire le nombre de students
+                fread(buffer.student, sizeof(Student), D.bf, ms); // Lire students
+
+                int foundPos = binarySearch(buffer.student, buffer.num, ID);
+                if (foundPos != -1) { // Étudiant trouvé
+                    pos.numBlock = blockNum;      // Numéro du Bloc où l'étudiant est trouvé
+                    pos.deplacement = foundPos;   // Position dans le bloc
+                    free(buffer.student);
+                    return pos;
+                }
+            }
+        } else if (meta.orgGlobal == CHAINED_FILE) {
+            int currentBlock = meta.adress1stBlock;
+            while (currentBlock != -1) {
+                offset(ms, D, currentBlock); // Aller au bloc nécessaire
+                fread(&buffer.num, sizeof(int), 1, ms); // Lire le nombre de students
+                fread(buffer.student, sizeof(Student), D.bf, ms); // Lire les étudiants
+                fread(&buffer.next, sizeof(int), 1, ms); // Lire le pointeur vers le prochain bloc
+
+                int foundPos = binarySearch(buffer.student, buffer.num, ID);
+                if (foundPos != -1) { // Étudiant trouvé
+                    pos.numBlock = currentBlock;   // Numéro du bloc où l'étudiant est trouvé
+                    pos.deplacement = foundPos;    // Position dans le bloc
+                    free(buffer.student);
+                    return pos;
+                }
+                currentBlock = buffer.next;
+            }
+        }
+    } else if (meta.orgInterne == NONORDONE_FILE) {
+            // Code te3 Adem
+    }
+    printf("Étudiant non trouvé.\n");
+    free(buffer.student);
+    return pos; // Retour de la valeur par défaut (-1, -1)
+}

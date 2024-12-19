@@ -43,4 +43,7 @@ typedef struct Meta {
     int position;
 }Meta;
 
-
+typedef struct posStudent {
+            int numBlock ;
+            int deplacement ;
+}posStudent;
