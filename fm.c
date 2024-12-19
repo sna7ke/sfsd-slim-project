@@ -450,7 +450,36 @@ posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
             }
         }
     } else if (meta.orgInterne == NONORDONE_FILE) {
-            // Code te3 Adem
+            if (meta.orgGlobal == 2) {
+                int i=meta.adress1stBlock;
+                for (int k = 0; k < D.blocks; k++) {
+                    offset(ms, D, i);
+                    fread(&buffer, sizeof(Block), 1,ms);
+                    for (int j = 0; j < buffer.num; j++) {
+                        if (buffer.student[j].ID == ID) {
+                        pos.deplacement=j;
+                        pos.numBlock=i;
+                        free(buffer.student);
+                    return pos;                }
+                    }
+                i=i+1;
+                }
+            } else if(meta.orgGlobal==1){
+                int i=meta.adress1stBlock;
+                while (i!=-1) {
+                    offset(ms,D,i);
+                    fread(&buffer,sizeof(Block),1,ms);
+                    for (int j = 0; j < buffer.num; j++) {
+                        if (buffer.student[j].ID == ID) {
+                            pos.deplacement=j;
+                            pos.numBlock=i;
+                            free(buffer.student);
+                            return pos;
+                        }
+                    }
+                    i=buffer.next;
+                }
+            }
     }
     printf("Étudiant non trouvé.\n");
     free(buffer.student);
