@@ -82,17 +82,17 @@ bool * ReadFAT (FILE *ms,int n) { // this function will read the file allocation
 
 void Display_Block(int Block_Number,FILE*ms,Disk D,Block * buffer) {
     rewind(ms);
-    fseek(ms,sizeof(bool)*D.blocks,SEEK_SET);
+    //fseek(ms,sizeof(bool)*D.blocks,SEEK_SET);
     //this moves the cursor to the end of the file allocation table then we would start reading the blocks bellow it
     //fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_CUR);
     offset(ms,D,Block_Number);
     //this moves the cursor to the desired block
     fread(buffer->student,sizeof(Student),D.bf,ms);
-    printf("read students");
+    //printf("read students");
     fread(&buffer->num,sizeof(int),1,ms);
-    printf("read the number");
+    //printf("read the number");
     fread(&buffer->next,sizeof(int),1,ms);
-    printf("read the next");
+    //printf("read the next");
 }
 
 void Empty_MS (FILE *ms,Disk D){
@@ -216,6 +216,7 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
                 fwrite(&positions[j],sizeof(int),1,ms);
             }
         }
+        met->adress1stBlock=positions[0];
 
         printf("Successful chained allocation.\n");
         free(positions);
@@ -224,10 +225,17 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
 }
 
 
+void WriteBlock(FILE * ms,Disk D,Block buffer,int pos) {
+    offset(ms,D,pos);
+
+    fwrite(buffer.student,sizeof(Student),D.bf,ms);
+    fwrite(&buffer.num,sizeof(int),1,ms);
+    fwrite(&buffer.next,sizeof(int),1,ms);
+
+}
 
 
-
-void LoadFile(FILE *ms, Disk D, int pos) { 
+void LoadFile(FILE *ms, Disk D, int pos) {
     // Lire les métadonnées
     Meta fMeta;
     int start;

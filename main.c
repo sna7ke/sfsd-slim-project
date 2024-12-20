@@ -41,6 +41,7 @@ int main(void) {
     printf("Mode d'organisation interne : %d\n", meta.orgInterne);
 
     printf("position of the file is : %d \n",meta.position);
+    printf("first block is : %d \n",meta.adress1stBlock);
 
     InitializeBlock(D,&buffer);
 
@@ -53,9 +54,34 @@ int main(void) {
         printf("the next block is %d \n",buffer.next);
 
     }
+    Student st;
+    for(int i =0;i<2;i++) {
+        printf("enter the students name : ");
+        scanf("%s",&st.name);
+        printf("enter the students group :");
+        scanf("%d",&st.group);
+        printf("enter the students ID :");
+        scanf("%d",&st.ID);
+        st.deleted=false;
+
+        insertStudent(ms,D,st,&meta);
+
+    }
+
+    for(int i=0;i<D.blocks;i++) {
+        Display_Block(i,ms,D,&buffer);
+        printf("the block number %d : \n",i);
+        for(int j=0;j<D.bf;j++){
+            printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
+        }
+        printf("the next block is %d \n",buffer.next);
+
+    }
 
     fileExists(ms,D,"chahi");
+    printf("exist \n");
     deleteFile(ms,&D,"chahi");
+    printf("deletes");
     fileExists(ms,D,"chahi");
 
 
@@ -116,3 +142,4 @@ int main(void) {
     return 0;
 
 }
+
