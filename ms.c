@@ -227,7 +227,7 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
 
 
 
-void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buffer.next in contiguous organisation but i put it in case , please remove it if i shouldn't (line 253 for now)
+void LoadFile(FILE *ms, Disk D, int pos) { 
     // Lire les métadonnées
     Meta fMeta;
     int start;
@@ -247,7 +247,7 @@ void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buff
     Display_Block( fMeta.adress1stBlock, ms, D, &buffer);
 
             int rec = fMeta.tailleEnRecord; //condition necessaire pour arreter la boucle j
-
+            printf("\n taille de record : %d \n", fMeta.tailleEnBlock);
     if (fMeta.orgGlobal == CONTIG_FILE) { // Si organisation contigue
          start = fMeta.adress1stBlock;
 
@@ -262,7 +262,7 @@ void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buff
                 j++;
             }
             printf("the next block is %d \n",buffer.next);
-            rec = rec - (i+1)*D.bf ;
+            rec = rec - D.bf ;
        }
 
     } else if (fMeta.orgGlobal == CHAINED_FILE) { // Si organisation chainée
@@ -280,11 +280,12 @@ void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buff
             }
             printf("the next block is %d \n",buffer.next);
             start = &buffer.next;
-            rec = rec - (i+1)*D.bf ;
+            rec = rec - D.bf ;
             i++;
         }
     }
     free(buffer.student);
     printf("Loading Successful.\n");
 }
+
 
