@@ -110,6 +110,99 @@ int fileExists(FILE *ms, Disk D, char fName[20]) {
     return -1;
 }
 
+int binarySearch(Student *students, int numRecords, int ID) { // Fonction de recherche dichotomique (division du tableau par 2 à chaque recherche pour but d'optimisation)
+    int start = 0, end = numRecords - 1;
+    // Vérification de si l'ID est en dehors de l'intervalle
+    if (ID < students[start].ID || ID > students[end].ID) {
+        return -1; // L'ID est en dehors de l'intervalle
+    while (start <= end) {
+        int mid = start + (end - start) / 2;
+        if (students[mid].ID == ID) {
+            return mid; // Étudiant trouvé
+        }
+        if (students[mid].ID < ID) {
+            start = mid + 1;
+        } else {
+            end = mid - 1;
+        }
+    }
+    return -1; // Étudiant non trouvé
+    }
+}
+
+posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
+    Block buffer;
+    InitializeBlock(D, &buffer); // Initialisation du buffer
+    posStudent pos;
+    pos.numBlock = -1;      // Valeurs par défaut si l'étudiant n'est pas trouvé
+    pos.deplacement = -1;
+    if (meta.orgInterne == ORDONE_FILE) {
+        if (meta.orgGlobal == CONTIG_FILE) {
+            for (int blockNum = 0; blockNum < meta.tailleEnBlock; blockNum++) {
+                offset(ms, D, meta.adress1stBlock + blockNum); // Aller au bloc nécessaire
+                fread(&buffer.num, sizeof(int), 1, ms); // Lire le nombre de students
+                fread(buffer.student, sizeof(Student), D.bf, ms); // Lire students
+                int foundPos = binarySearch(buffer.student, buffer.num, ID);
+                if (foundPos != -1) { // Étudiant trouvé
+                    pos.numBlock = blockNum;      // Numéro du Bloc où l'étudiant est trouvé
+                    pos.deplacement = foundPos;   // Position dans le bloc
+                    free(buffer.student);
+                    return pos;
+                }
+            }
+        } else if (meta.orgGlobal == CHAINED_FILE) {
+            int currentBlock = meta.adress1stBlock;
+            while (currentBlock != -1) {
+                offset(ms, D, currentBlock); // Aller au bloc nécessaire
+                fread(&buffer.num, sizeof(int), 1, ms); // Lire le nombre de students
+                fread(buffer.student, sizeof(Student), D.bf, ms); // Lire les étudiants
+                fread(&buffer.next, sizeof(int), 1, ms); // Lire le pointeur vers le prochain bloc
+                int foundPos = binarySearch(buffer.student, buffer.num, ID);
+                if (foundPos != -1) { // Étudiant trouvé
+                    pos.numBlock = currentBlock;   // Numéro du bloc où l'étudiant est trouvé
+                    pos.deplacement = foundPos;    // Position dans le bloc
+                    free(buffer.student);
+                    return pos;
+                }
+                currentBlock = buffer.next;
+            }
+        }
+    } else if (meta.orgInterne == NONORDONE_FILE) {
+            if (meta.orgGlobal == 2) {
+                int i=meta.adress1stBlock;
+                for (int k = 0; k < D.blocks; k++) {
+                    offset(ms, D, i);
+                    fread(&buffer, sizeof(Block), 1,ms);
+                    for (int j = 0; j < buffer.num; j++) {
+                        if (buffer.student[j].ID == ID) {
+                        pos.deplacement=j;
+                        pos.numBlock=i;
+                        free(buffer.student);
+                    return pos;                }
+                    }
+                i=i+1;
+                }
+            } else if(meta.orgGlobal==1){
+                int i=meta.adress1stBlock;
+                while (i!=-1) {
+                    offset(ms,D,i);
+                    fread(&buffer,sizeof(Block),1,ms);
+                    for (int j = 0; j < buffer.num; j++) {
+                        if (buffer.student[j].ID == ID) {
+                            pos.deplacement=j;
+                            pos.numBlock=i;
+                            free(buffer.student);
+                            return pos;
+                        }
+                    }
+                    i=buffer.next;
+                }
+            }
+    }
+    printf("Étudiant non trouvé.\n");
+    free(buffer.student);
+    return pos; // Retour de la valeur par défaut (-1, -1)
+}
 
 void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
     Block buffer;
@@ -202,56 +295,121 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
         }
 
       else if (meta->orgInterne == ORDONE_FILE) {
-
-        int i = meta->adress1stBlock;
-        while (i != -1) {
-            offset(ms, D, i);
-            fread(&buffer, sizeof(Block), 1, ms);
-            for (int j = 0; j < buffer.num; j++) {
-                if (newStudent.ID < buffer.student[j].ID) {
-                        for (int k = buffer.num; k > j; k--) {
-                            buffer.student[k] = buffer.student[k-1];
-                        }                        buffer.student[j] = newStudent;
-                buffer.student[j].deleted = false;
-                buffer.num++;
-                fseek(ms, -sizeof(Block), SEEK_CUR);
-                fwrite(&buffer, sizeof(Block), 1, ms);
-                meta->tailleEnRecord++;
-                return;
-                }
-              }
-
-                if (buffer.next == -1) {
+       Block buffer;
+            InitializeBlock(D, &buffer);
+            bool found = false;
+            posStudent pos = {0, 0};// First, find the correct block and position for insertion
+            int currentBlock = meta->adress1stBlock;
+            int blockCount = 0;
+            while (currentBlock != -1 && !found) {
+                offset(ms, D, currentBlock);
+                Display_Block(currentBlock, ms, D, &buffer);// Check each student in current block
+                for (int j = 0; j < buffer.num; j++) {
+                    if (newStudent.ID < buffer.student[j].ID) {
+                        pos.deplacement = j;
+                        pos.numBlock = blockCount;
+                        found = true;
+                        break;
+                    }
+                }// If we haven't found a position yet
+                if (!found) {
+                    // If this block isn't full
                     if (buffer.num < D.bf) {
-                        buffer.student[buffer.num] = newStudent;
-                        buffer.student[buffer.num].deleted = false;
+                        pos.deplacement = buffer.num;
+                        pos.numBlock = blockCount;
+                        found = true;
+                    }// If this is the last block and it's full
+                    else if (buffer.next == -1) {
+                        pos.deplacement = D.bf;  // Position after last element
+                        pos.numBlock = blockCount;
+                        found = true;
+                    }// Move to next block
+                    else {
+                        currentBlock = buffer.next;
+                        blockCount++;
+                    }
+                }
+            }// Now insert the student and shift others as needed
+            currentBlock = meta->adress1stBlock;
+            Student tempStudent = newStudent;
+            int currentPos = pos.deplacement;
+            blockCount = 0;
+            while (currentBlock != -1) {
+                offset(ms, D, currentBlock);
+                Display_Block(currentBlock, ms, D, &buffer);
+                if (blockCount == pos.numBlock) {// This is the block where we need to insert
+                    if (buffer.num < D.bf) {// There's space in this block
+                        for (int i = buffer.num; i > currentPos; i--) {
+                            buffer.student[i] = buffer.student[i-1];
+                        }
+                        buffer.student[currentPos] = tempStudent;
                         buffer.num++;
-                        fseek(ms, -sizeof(Block), SEEK_CUR);
-                        fwrite(&buffer, sizeof(Block), 1, ms);
+
+                        offset(ms, D, currentBlock);
+                        writeblock (ms,buffer , D);
                         meta->tailleEnRecord++;
-                        return;
-                   }
-                }// le prochain blc
-                     i = buffer.next;
+                        break;
+                    } else {// Need to create new block if this is the last block
+                        if (buffer.next == -1) {
+                            int* newBlockPos = checkFAT(ms, D, 1, CHAINED_FILE);
+                            if (newBlockPos == NULL) {
+                                printf("Error: No space available for new block\n");
+                                free(buffer.student);
+                                return;
+                            }// If inserting in middle of current block
+                            if (currentPos < D.bf) {
+                                Student overflowStudent = buffer.student[D.bf - 1];// Shift elements to make space
+                                for (int i = D.bf - 1; i > currentPos; i--) {
+                                    buffer.student[i] = buffer.student[i-1];
+                                }
+                                buffer.student[currentPos] = tempStudent;// Write back the modified block
+                                offset(ms, D, currentBlock);
+                                fwrite(buffer.student, sizeof(Student), D.bf, ms);
+                                fwrite(&buffer.num, sizeof(int), 1, ms);
+
+                                tempStudent = overflowStudent;  // The overflow student goes to new block
+                            }// Update current block's next pointer
+                            buffer.next = *newBlockPos;
+                            offset(ms, D, currentBlock);
+                            fseek(ms, sizeof(Student) * D.bf + sizeof(int), SEEK_CUR);
+                            fwrite(&buffer.next, sizeof(int), 1, ms);// Create new block with overflow/new student
+                            Block newBlock;
+                            InitializeBlock(D, &newBlock);
+                            newBlock.student[0] = tempStudent;
+                            newBlock.num = 1;
+                            newBlock.next = -1;
+                            offset(ms, D, *newBlockPos);
+                            writeblock (ms, buffer , D);
+                            Update_FAT(ms, *newBlockPos, true);
+                            meta->tailleEnRecord++;
+                            meta->tailleEnBlock++;
+                            free(newBlock.student);
+                            free(newBlockPos);
+                            break;
+                        }// Not the last block, continue shifting
+                        else {
+                            Student overflowStudent = buffer.student[D.bf - 1];
+                            for (int i = D.bf - 1; i > currentPos; i--) {
+                                buffer.student[i] = buffer.student[i-1];
+                            }
+                            buffer.student[currentPos] = tempStudent;
+                            offset(ms, D, currentBlock);
+                            writeblock (ms, buffer ,D);
+                            tempStudent = overflowStudent;
+                            currentPos = 0;
+                            currentBlock = buffer.next;
+                            blockCount++;
+                        }
+                    }
+                } else {
+                    currentBlock = buffer.next;
+                    blockCount++;
+                }
             }
-            InitializeBlock ( D, &buffer);
-            buffer.student[0] = newStudent;
-            buffer.student[0].deleted = false;// ajt un nv blc
-            buffer.num = 1;
-            buffer.next = -1;
-            fseek(ms, 0, SEEK_END);
-            fwrite(&buffer, sizeof(Block), 1, ms);// misaj  le pointeur du dernier bloc
-            if (D.blocks > 0) {
-                fseek(ms, sizeof(bool)*D.blocks + (D.blocks - 1) * sizeof(Block)+sizeof(int), SEEK_SET);
-                int nvblcidx = D.blocks;
-                fwrite(&nvblcidx, sizeof(int), 1, ms);
-            }// misaj metadata
-            meta->tailleEnRecord++;
-            D.blocks++;
-            meta->tailleEnBlock++;
-            return;
+
+            free(buffer.student);
         }
-    }
+            }
 
     else if (meta->orgGlobal == CONTIG_FILE) {
 
@@ -310,57 +468,121 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
                 fwrite(buffer.student,sizeof(Student),D.bf,ms);
                 fwrite(&buffer.num,sizeof(int),1,ms);
                 fwrite(&buffer.next,sizeof(int),1,ms);*/
-                WriteBlock(ms,D,buffer,k);
+                WriteBlockwPos(ms,D,buffer,k);
                 meta->tailleEnBlock++;
                 meta->tailleEnRecord++;
                 return;
 
             }
         }
-         else if (meta->orgInterne == ORDONE_FILE) {
+        else if (meta->orgInterne == ORDONE_FILE) {
+        Block buffer;
+    InitializeBlock(D, &buffer);
 
-            for (int i = 0; i< D.blocks; i++) {
-                offset(ms, D, i);
-                fread(&buffer, sizeof(Block), 1, ms);//trouverle point dinsertion dans les blocs
-                for (int j = 0; j < buffer.num; j++) {
+    int currentBlock = meta->adress1stBlock; // Premier bloc du fichier
+    bool allBlocksFull = true;               // Indicateur de bloc plein
+    bool inserted = false;                   // Indicateur d'insertion réussie
+    Student tempStudent = newStudent;        // Étudiant à insérer
 
-                        if (newStudent.ID < buffer.student[j].ID) { // Shift records to make space
+    // Étape 1 : Vérification si tous les blocs sont pleins (parcours contigu)
+    while (currentBlock < meta->tailleEnBlock && !inserted) {
+        offset(ms, D, currentBlock);
+        Display_Block(currentBlock, ms, D, &buffer);
 
-                            for (int k = buffer.num; k > j; k--) {
+        if (buffer.num < D.bf) {
+            // Si un bloc n'est pas plein, il y a de l'espace pour insérer
+            allBlocksFull = false;
+            break;  // On peut arrêter la recherche, il suffit de trouver un bloc avec de l'espace
+        }
 
-                            buffer.student[k] = buffer.student[k-1];
+        currentBlock++; // Passer au bloc suivant (organisation contiguë)
+    }
 
-                            }
+    if (!allBlocksFull) {
+        // Étape 2 : Insertion dans un bloc existant avec un décalage intra-bloc
+        currentBlock = meta->adress1stBlock; // Revenir au premier bloc
+        while (currentBlock < meta->tailleEnBlock && !inserted) {
+            offset(ms, D, currentBlock);
+            Display_Block(currentBlock, ms, D, &buffer);
 
-                            // Inserer un nv etudiant
-                            buffer.student[j] = newStudent;
-                            buffer.student[j].deleted = false;
-                            buffer.num++;// Overwrite block
-                            fseek(ms, -sizeof(Block), SEEK_CUR);
-                            fwrite(&buffer, sizeof(Block), 1, ms);// misaj metadata
-                            meta->tailleEnRecord++;
-                            return;
-                        }
+            if (buffer.num < D.bf) {
+                // Le bloc a de l'espace, décaler et insérer
+                int j = buffer.num - 1;
+                // Décalage des enregistrements pour insérer l'étudiant au bon emplacement
+                while (j >= 0 && tempStudent.ID < buffer.student[j].ID) {
+                    buffer.student[j + 1] = buffer.student[j]; // Décalage
+                    j--;
                 }
+                buffer.student[j + 1] = tempStudent; // Insertion
+                buffer.num++;
+
+                // Mise à jour du bloc dans la mémoire système
+                offset(ms, D, currentBlock);
+                fwrite(buffer.student, sizeof(Student), D.bf, ms);
+                fwrite(&buffer.num, sizeof(int), 1, ms);
+                fwrite(&buffer.next, sizeof(int), 1, ms);
+
+                inserted = true; // Étudiant inséré
+                meta->tailleEnRecord++; // Mettre à jour les métadonnées
+            } else {
+                // Passer au bloc suivant (toujours en contigu)
+                currentBlock++;
             }
-        // Isiya pas despace en ajoute un nv
-         InitializeBlock (D,&buffer);
-        buffer.student[0] = newStudent;
-        buffer.student[0].deleted = false;
-        buffer.num = 1;
-        buffer.next = -1;//ajouter un nv bloc
-        fseek(ms, 0, SEEK_END);
-         fwrite(&buffer, sizeof(Block), 1, ms);// misajour metadata
-        meta->tailleEnRecord++;
-         D.blocks++;
-         meta->tailleEnBlock++;
-         return;
+        }
+    }
+
+    // Étape 3 : Si tous les blocs sont pleins, réallouer de l'espace
+    if (allBlocksFull && currentBlock == meta->tailleEnBlock) {
+        // Il n'y a plus de place dans les blocs existants
+        printf("Tous les blocs sont pleins. Réallocation de l'espace...\n");
+
+        // Réallouer un bloc supplémentaire pour tout le fichier
+        int newBlock = meta->tailleEnBlock;  // Le prochain bloc disponible
+        meta->tailleEnBlock++;               // Augmenter la taille du fichier en blocs
+
+        // On doit copier tous les étudiants actuels dans un nouvel espace
+        Student *newFileData = malloc(sizeof(Student) * D.bf * (meta->tailleEnBlock)); // Allouer de l'espace pour tous les enregistrements, y compris le nouveau bloc
+
+        // Copier les étudiants des blocs existants dans le nouvel espace contigu
+        currentBlock = meta->adress1stBlock; // Revenir au premier bloc
+        int i = 0;  // Compteur pour les enregistrements dans le nouvel espace
+        while (currentBlock < meta->tailleEnBlock) {
+            offset(ms, D, currentBlock);
+            Display_Block(currentBlock, ms, D, &buffer);
+
+            for (int j = 0; j < buffer.num; j++) {
+                newFileData[i++] = buffer.student[j]; // Copier les étudiants
+            }
+
+            currentBlock++;  // Passer au bloc suivant (toujours contigu)
+        }
+
+        // Ajouter le nouvel étudiant à la bonne position dans le nouvel espace
+        int j = i - 1;
+        while (j >= 0 && tempStudent.ID < newFileData[j].ID) {
+            newFileData[j + 1] = newFileData[j]; // Décalage
+            j--;
+        }
+        newFileData[j + 1] = tempStudent; // Insertion du nouvel étudiant
+        i++;
+
+        // Mise à jour des métadonnées
+        meta->tailleEnRecord = i;    // Mettre à jour le nombre d'enregistrements
+        meta->adress1stBlock = 0;    // Premier bloc du fichier réécrit
+
+        // Réécriture du fichier dans le nouvel espace
+        fseek(ms, 0, SEEK_SET); // Revenir au début du fichier
+        fwrite(newFileData, sizeof(Student), i, ms); // Écrire les nouveaux enregistrements
+        free(newFileData);  // Libérer la mémoire allouée
+
+        inserted = true;  // Étudiant inséré
+    }
+
+    // Libération de la mémoire tampon
+    free(buffer.student);
+}
     }
 }
-
-}
-
-
 
 void deleteFile(FILE *ms, Disk *D, char fName[20]) {
 
@@ -396,7 +618,6 @@ void deleteFile(FILE *ms, Disk *D, char fName[20]) {
         InitializeBlock(*D,&buffer);
 
         while (currentBlock != -1) {
-                printf("mochkila\n");
             Display_Block(currentBlock,ms,*D,&buffer);
 
             // Réinitialiser le bloc en écrivant un bloc vide

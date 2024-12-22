@@ -225,15 +225,18 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
 }
 
 
-void WriteBlock(FILE * ms,Disk D,Block buffer,int pos) {
+void WriteBlockwPos(FILE * ms,Disk D,Block buffer,int pos) {
     offset(ms,D,pos);
-
     fwrite(buffer.student,sizeof(Student),D.bf,ms);
     fwrite(&buffer.num,sizeof(int),1,ms);
     fwrite(&buffer.next,sizeof(int),1,ms);
-
 }
 
+void writeblock (FILE *ms,Block buffer ,Disk D){
+     fwrite(buffer.student, sizeof(Student), D.bf, ms);
+     fwrite(&buffer.num, sizeof(int), 1, ms);
+     fwrite(&buffer.next, sizeof(int), 1, ms);
+}
 
 void LoadFile(FILE *ms, Disk D, int pos) {
     // Lire les métadonnées

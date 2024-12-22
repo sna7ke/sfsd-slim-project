@@ -11,4 +11,5 @@ int* checkFAT(FILE *ms, Disk D, int blocsFile,int Mode);
 void offset (FILE *ms,Disk D, int Block_Number);
 void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met);
 void LoadFile(FILE *ms, Disk D, int pos);
-void WriteBlock(FILE * ms,Disk D,Block buffer,int pos);
+void WriteBlockwPos(FILE * ms,Disk D,Block buffer,int pos);
+void writeblock (FILE *ms,Block buffer ,Disk D);
