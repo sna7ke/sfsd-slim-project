@@ -264,7 +264,7 @@ void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buff
     Display_Block( fMeta.adress1stBlock, ms, D, &buffer);
 
             int rec = fMeta.tailleEnRecord; //condition necessaire pour arreter la boucle j
-            printf("\n taille de record : %d \n", fMeta.tailleEnBlock);
+            printf("\n taille de record : %d \n", fMeta.tailleEnRecord);
     if (fMeta.orgGlobal == CONTIG_FILE) { // Si organisation contigue
          start = fMeta.adress1stBlock;
 
