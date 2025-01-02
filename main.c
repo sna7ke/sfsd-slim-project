@@ -55,7 +55,7 @@ int main(void) {
 
     }
     Student st;
-    for(int i =0;i<2;i++) {
+    for(int i =0;i<3;i++) {
         printf("enter the students name : ");
         scanf("%s",&st.name);
         printf("enter the students group :");
@@ -65,6 +65,7 @@ int main(void) {
         st.deleted=false;
 
         insertStudent(ms,D,st,&meta);
+
 
     }
 

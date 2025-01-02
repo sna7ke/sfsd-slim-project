@@ -175,7 +175,7 @@ void offset (FILE *ms,Disk D, int Block_Number){
 }
 
 
-void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode ,Meta * met) {
+void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
 
     if (mode == CONTIG_FILE) {
         // Getting the adjaçant blocks from the checkFAT function
@@ -198,8 +198,6 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode ,Meta * met) {
     } else if (mode == CHAINED_FILE) {
         // Recherche des blocs non contigus
         int *positions = checkFAT(ms, D, nbr_blocks, CHAINED_FILE);
-        //we will update the meta data's first block adress
-        met->adress1stBlock=positions[0];
         if (!positions) {
             printf("Not enough space for chained allocation.\n");
             free(positions);
@@ -217,14 +215,14 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode ,Meta * met) {
                 fseek(ms,sizeof(int),SEEK_CUR);
                 fwrite(&positions[j],sizeof(int),1,ms);
             }
-         }
+        }
+        met->adress1stBlock=positions[0];
 
         printf("Successful chained allocation.\n");
         free(positions);
         return;
     }
 }
-
 
 
 void WriteBlockwPos(FILE * ms,Disk D,Block buffer,int pos) {
@@ -240,11 +238,7 @@ void writeblock (FILE *ms,Block buffer ,Disk D){
      fwrite(&buffer.next, sizeof(int), 1, ms);
 }
 
-
-
-
-
-void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buffer.next in contiguous organisation but i put it in case , please remove it if i shouldn't (line 253 for now)
+void LoadFile(FILE *ms, Disk D, int pos) {
     // Lire les métadonnées
     Meta fMeta;
     int start;
@@ -264,7 +258,7 @@ void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buff
     Display_Block( fMeta.adress1stBlock, ms, D, &buffer);
 
             int rec = fMeta.tailleEnRecord; //condition necessaire pour arreter la boucle j
-            printf("\n taille de record : %d \n", fMeta.tailleEnRecord);
+            printf("\n taille de record : %d \n", fMeta.tailleEnBlock);
     if (fMeta.orgGlobal == CONTIG_FILE) { // Si organisation contigue
          start = fMeta.adress1stBlock;
 
@@ -304,20 +298,6 @@ void LoadFile(FILE *ms, Disk D, int pos) { // I'm not sure if i should read buff
     free(buffer.student);
     printf("Loading Successful.\n");
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 void compactage(FILE *ms, Disk D) {
