@@ -9,10 +9,10 @@ Block fillBuffer(Disk d) {
    InitializeBlock(d,&buffer);
     char temp[100];
 
-   printf("Remplissage du buffer (maximum %d Ètudiants) :\n", d.bf);
+   printf("Remplissage du buffer (maximum %d √©tudiants) :\n", d.bf);
 
 for (int i = 0; i < d.bf; i++) {
-    printf("\n…tudiant %d :\n", i + 1);
+    printf("\n√âtudiant %d :\n", i + 1);
 
     printf("Nom : ");
     scanf("%s", buffer.student[i].name);
@@ -29,7 +29,7 @@ for (int i = 0; i < d.bf; i++) {
 
     if (i < d.bf - 1) {
         char choice;
-        printf("Voulez-vous ajouter un autre Ètudiant ? (y/n) : ");
+        printf("Voulez-vous ajouter un autre √©tudiant ? (y/n) : ");
         scanf(" %c", &choice);
         if (choice == 'n' || choice == 'N') {
             break;
@@ -37,63 +37,53 @@ for (int i = 0; i < d.bf; i++) {
     }
 }
 
-printf("\nLe buffer a ÈtÈ rempli avec %d Ètudiants.\n", buffer.num);
+printf("\nLe buffer a √©t√© rempli avec %d √©tudiants.\n", buffer.num);
 return  buffer;
 }
 
 
-void creatFile (FILE *ms, Disk *D){
+void creatFile (FILE *ms, Disk *D,Meta *m){
     //NOTE : THIS FUNCTION'S STRUCTURE IS TEMPORARY UNTIL WE WORK ON THE GUI
 Meta meta;
- // Demander nom du fichier
-    printf("File Name : "); // Temporaire avant l'implÈmentation de l'interface graphique
-    scanf("%s", meta.nomF);
-    // Demander nombre de records
-    //printf("Number of records : ");
-    //scanf("%d", &meta.tailleEnRecord);
-    printf("Number of Blocks you wish to initialize your file with : ");
-    scanf("%d", &meta.tailleEnBlock);
+
 
     meta.tailleEnRecord=0;
 
-    // Calcul du nombre de blocs
-    /*if ( meta.tailleEnRecord % D->bf == 0 ){
-        meta.tailleEnBlock =  meta.tailleEnRecord/D->bf ;
-    }else{
-        meta.tailleEnBlock = ( (meta.tailleEnRecord/D->bf)+1 );
-    }*/
+    meta=*m;
 
-    // Demande du mode d'organisation global
-    printf("Choose global organisation mode ( 1:CHAINED_FILE / 2:CONTIGUOUS_FILE ) : ");
-    scanf("%d", &meta.orgGlobal);
+    printf("File Name : %s\n",meta); // Temporaire avant l'implÔøΩmentation de l'interface graphique
+    printf("Number of Blocks you wish to initialize your file with :%d \n",meta.tailleEnBlock);
+    printf("Choose global organisation mode  :%d \n",meta.orgGlobal);
+
     // Demande du mode d'organisation interne
-    printf("Choose intern organisation mode ( 1:ORDONE_FILE / 2:NONORDONE_FILE ) : ");
-    scanf("%d", &meta.orgInterne);
+    printf("Choose intern organisation mode :%d \n",meta.orgInterne);
+
     // position du fichier
     meta.position=D->nbrFiles+1;
 
         //int nbBlock = (nombreDeRecord/D.bf)+1; //calculer le nombre de block
-        printf("org global : %d \n",meta.orgGlobal);
-int * space = checkFAT(ms, *D, meta.tailleEnBlock,meta.orgGlobal);
-     // meta.adress1stBlock = *space;
-if(space == NULL){
-    printf("ERREUR f creat !!! \n");
+
+        int * space = checkFAT(ms, *D,meta.tailleEnBlock,meta.orgGlobal);
+        // meta.adress1stBlock = *space;
+        if(space == NULL){
+        printf("Not enough space to create the file!!! \n");
+        }
+        else{
+                printf("check \n");
+
+
+
+        Allocate_Block(ms, *D,& meta.tailleEnBlock,&meta.orgGlobal,&meta);
+
+        createMeta(ms, meta); //creer un fichier de metadonnee pour ce fichier
+        D->nbrFiles++;
+        free(space);
 }
-else{
-
-
-    Allocate_Block(ms, *D, meta.tailleEnBlock,meta.orgGlobal,&meta);
-
-    createMeta(ms, meta); //creer un fichier de metadonnee pour ce fichier
-    D->nbrFiles++;
-    free(space);
 }
-}
-
 
 int fileExists(FILE *ms, Disk D, char fName[20]) {
     Meta met;
-    // Parcourir toutes les mÈtadonnÈes pour vÈrifier si le nom existe dÈj‡
+    // Parcourir toutes les m√©tadonn√©es pour v√©rifier si le nom existe d√©j√†
     for (int i =0 ; i <D.nbrFiles ; i++) {
         met=readMeta(ms,D,i+1);
         printf("this is going to be the name from comparing");
@@ -105,20 +95,20 @@ int fileExists(FILE *ms, Disk D, char fName[20]) {
             return met.position;
         }
     }
-    // Si aucun fichier n'a le mÍme nom
+    // Si aucun fichier n'a le m√™me nom
     printf("The file does not exist.\n");
     return -1;
 }
 
-int binarySearch(Student *students, int numRecords, int ID) { // Fonction de recherche dichotomique (division du tableau par 2 ‡ chaque recherche pour but d'optimisation)
+int binarySearch(Student *students, int numRecords, int ID) { // Fonction de recherche dichotomique (division du tableau par 2 √† chaque recherche pour but d'optimisation)
     int start = 0, end = numRecords - 1;
-    // VÈrification de si l'ID est en dehors de l'intervalle
+    // V√©rification de si l'ID est en dehors de l'intervalle
     if (ID < students[start].ID || ID > students[end].ID) {
         return -1; // L'ID est en dehors de l'intervalle
     while (start <= end) {
         int mid = start + (end - start) / 2;
         if (students[mid].ID == ID) {
-            return mid; // …tudiant trouvÈ
+            return mid; // √âtudiant trouv√©
         }
         if (students[mid].ID < ID) {
             start = mid + 1;
@@ -126,7 +116,7 @@ int binarySearch(Student *students, int numRecords, int ID) { // Fonction de rec
             end = mid - 1;
         }
     }
-    return -1; // …tudiant non trouvÈ
+    return -1; // √âtudiant non trouv√©
     }
 }
 
@@ -134,17 +124,17 @@ posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
     Block buffer;
     InitializeBlock(D, &buffer); // Initialisation du buffer
     posStudent pos;
-    pos.numBlock = -1;      // Valeurs par dÈfaut si l'Ètudiant n'est pas trouvÈ
+    pos.numBlock = -1;      // Valeurs par d√©faut si l'√©tudiant n'est pas trouv√©
     pos.deplacement = -1;
     if (meta.orgInterne == ORDONE_FILE) {
         if (meta.orgGlobal == CONTIG_FILE) {
             for (int blockNum = 0; blockNum < meta.tailleEnBlock; blockNum++) {
-                offset(ms, D, meta.adress1stBlock + blockNum); // Aller au bloc nÈcessaire
+                offset(ms, D, meta.adress1stBlock + blockNum); // Aller au bloc n√©cessaire
                 fread(&buffer.num, sizeof(int), 1, ms); // Lire le nombre de students
                 fread(buffer.student, sizeof(Student), D.bf, ms); // Lire students
                 int foundPos = binarySearch(buffer.student, buffer.num, ID);
-                if (foundPos != -1) { // …tudiant trouvÈ
-                    pos.numBlock = blockNum;      // NumÈro du Bloc o˘ l'Ètudiant est trouvÈ
+                if (foundPos != -1) { // √âtudiant trouv√©
+                    pos.numBlock = blockNum;      // Num√©ro du Bloc o√π l'√©tudiant est trouv√©
                     pos.deplacement = foundPos;   // Position dans le bloc
                     free(buffer.student);
                     return pos;
@@ -153,13 +143,13 @@ posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
         } else if (meta.orgGlobal == CHAINED_FILE) {
             int currentBlock = meta.adress1stBlock;
             while (currentBlock != -1) {
-                offset(ms, D, currentBlock); // Aller au bloc nÈcessaire
+                offset(ms, D, currentBlock); // Aller au bloc n√©cessaire
                 fread(&buffer.num, sizeof(int), 1, ms); // Lire le nombre de students
-                fread(buffer.student, sizeof(Student), D.bf, ms); // Lire les Ètudiants
+                fread(buffer.student, sizeof(Student), D.bf, ms); // Lire les √©tudiants
                 fread(&buffer.next, sizeof(int), 1, ms); // Lire le pointeur vers le prochain bloc
                 int foundPos = binarySearch(buffer.student, buffer.num, ID);
-                if (foundPos != -1) { // …tudiant trouvÈ
-                    pos.numBlock = currentBlock;   // NumÈro du bloc o˘ l'Ètudiant est trouvÈ
+                if (foundPos != -1) { // √âtudiant trouv√©
+                    pos.numBlock = currentBlock;   // Num√©ro du bloc o√π l'√©tudiant est trouv√©
                     pos.deplacement = foundPos;    // Position dans le bloc
                     free(buffer.student);
                     return pos;
@@ -199,9 +189,9 @@ posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
                 }
             }
     }
-    printf("…tudiant non trouvÈ.\n");
+    printf("√âtudiant non trouv√©.\n");
     free(buffer.student);
-    return pos; // Retour de la valeur par dÈfaut (-1, -1)
+    return pos; // Retour de la valeur par d√©faut (-1, -1)
 }
 
 void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
@@ -507,7 +497,7 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
             //if the next block is free we allocate it , if not we make an error ( we might work on a reallocate function)
             bool * b = ReadFAT(ms,D.blocks);
 
-            //this here means that : we are either at the last block or, the adjaÁante block is occupied
+            //this here means that : we are either at the last block or, the adja√ßante block is occupied
             if (k>D.blocks || b[k]==true){
                 printf("THE DISK IS FULL WE CANNOT ALLOCATE MORE BLOCKS\n");
                 free(b);
@@ -541,49 +531,49 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
 
     int currentBlock = meta->adress1stBlock; // Premier bloc du fichier
     bool allBlocksFull = true;               // Indicateur de bloc plein
-    bool inserted = false;                   // Indicateur d'insertion rÈussie
-    Student tempStudent = newStudent;        // …tudiant ‡ insÈrer
+    bool inserted = false;                   // Indicateur d'insertion r√©ussie
+    Student tempStudent = newStudent;        // √âtudiant √† ins√©rer
 
-    // …tape 1 : VÈrification si tous les blocs sont pleins (parcours contigu)
+    // √âtape 1 : V√©rification si tous les blocs sont pleins (parcours contigu)
     while (currentBlock < meta->tailleEnBlock+ meta->adress1stBlock && !inserted) {
         offset(ms, D, currentBlock);
         Display_Block(currentBlock, ms, D, &buffer);
 
         if (buffer.num < D.bf) {
-            // Si un bloc n'est pas plein, il y a de l'espace pour insÈrer
+            // Si un bloc n'est pas plein, il y a de l'espace pour ins√©rer
             allBlocksFull = false;
-            break;  // On peut arrÍter la recherche, il suffit de trouver un bloc avec de l'espace
+            break;  // On peut arr√™ter la recherche, il suffit de trouver un bloc avec de l'espace
         }
 
-        currentBlock++; // Passer au bloc suivant (organisation contiguÎ)
+        currentBlock++; // Passer au bloc suivant (organisation contigu√´)
     }
 
     if (!allBlocksFull) {
-        // …tape 2 : Insertion dans un bloc existant avec un dÈcalage intra-bloc
+        // √âtape 2 : Insertion dans un bloc existant avec un d√©calage intra-bloc
         currentBlock = meta->adress1stBlock; // Revenir au premier bloc
         while (currentBlock < meta->tailleEnBlock && !inserted) {
             offset(ms, D, currentBlock);
             Display_Block(currentBlock, ms, D, &buffer);
 
             if (buffer.num < D.bf) {
-                // Le bloc a de l'espace, dÈcaler et insÈrer
+                // Le bloc a de l'espace, d√©caler et ins√©rer
                 int j = buffer.num - 1;
-                // DÈcalage des enregistrements pour insÈrer l'Ètudiant au bon emplacement
+                // D√©calage des enregistrements pour ins√©rer l'√©tudiant au bon emplacement
                 while (j >= 0 && tempStudent.ID < buffer.student[j].ID) {
-                    buffer.student[j + 1] = buffer.student[j]; // DÈcalage
+                    buffer.student[j + 1] = buffer.student[j]; // D√©calage
                     j--;
                 }
                 buffer.student[j + 1] = tempStudent; // Insertion
                 buffer.num++;
 
-                // Mise ‡ jour du bloc dans la mÈmoire systËme
+                // Mise √† jour du bloc dans la m√©moire syst√®me
                 offset(ms, D, currentBlock);
                 fwrite(buffer.student, sizeof(Student), D.bf, ms);
                 fwrite(&buffer.num, sizeof(int), 1, ms);
                 fwrite(&buffer.next, sizeof(int), 1, ms);
 
-                inserted = true; // …tudiant insÈrÈ
-                meta->tailleEnRecord++; // Mettre ‡ jour les mÈtadonnÈes
+                inserted = true; // √âtudiant ins√©r√©
+                meta->tailleEnRecord++; // Mettre √† jour les m√©tadonn√©es
             } else {
                 // Passer au bloc suivant (toujours en contigu)
                 currentBlock++;
@@ -591,19 +581,19 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
         }
     }
 
-    // …tape 3 : Si tous les blocs sont pleins, rÈallouer de l'espace
+    // √âtape 3 : Si tous les blocs sont pleins, r√©allouer de l'espace
     if (allBlocksFull && currentBlock == meta->tailleEnBlock) {
         // Il n'y a plus de place dans les blocs existants
-        printf("Tous les blocs sont pleins. RÈallocation de l'espace...\n");
+        printf("Tous les blocs sont pleins. R√©allocation de l'espace...\n");
 
-        // RÈallouer un bloc supplÈmentaire pour tout le fichier
+        // R√©allouer un bloc suppl√©mentaire pour tout le fichier
         int newBlock = meta->tailleEnBlock;  // Le prochain bloc disponible
         meta->tailleEnBlock++;               // Augmenter la taille du fichier en blocs
 
-        // On doit copier tous les Ètudiants actuels dans un nouvel espace
+        // On doit copier tous les √©tudiants actuels dans un nouvel espace
         Student *newFileData = malloc(sizeof(Student) * D.bf * (meta->tailleEnBlock)); // Allouer de l'espace pour tous les enregistrements, y compris le nouveau bloc
 
-        // Copier les Ètudiants des blocs existants dans le nouvel espace contigu
+        // Copier les √©tudiants des blocs existants dans le nouvel espace contigu
         currentBlock = meta->adress1stBlock; // Revenir au premier bloc
         int i = 0;  // Compteur pour les enregistrements dans le nouvel espace
         while (currentBlock < meta->tailleEnBlock) {
@@ -611,34 +601,34 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
             Display_Block(currentBlock, ms, D, &buffer);
 
             for (int j = 0; j < buffer.num; j++) {
-                newFileData[i++] = buffer.student[j]; // Copier les Ètudiants
+                newFileData[i++] = buffer.student[j]; // Copier les √©tudiants
             }
 
             currentBlock++;  // Passer au bloc suivant (toujours contigu)
         }
 
-        // Ajouter le nouvel Ètudiant ‡ la bonne position dans le nouvel espace
+        // Ajouter le nouvel √©tudiant √† la bonne position dans le nouvel espace
         int j = i - 1;
         while (j >= 0 && tempStudent.ID < newFileData[j].ID) {
-            newFileData[j + 1] = newFileData[j]; // DÈcalage
+            newFileData[j + 1] = newFileData[j]; // D√©calage
             j--;
         }
-        newFileData[j + 1] = tempStudent; // Insertion du nouvel Ètudiant
+        newFileData[j + 1] = tempStudent; // Insertion du nouvel √©tudiant
         i++;
 
-        // Mise ‡ jour des mÈtadonnÈes
-        meta->tailleEnRecord = i;    // Mettre ‡ jour le nombre d'enregistrements
-        meta->adress1stBlock = 0;    // Premier bloc du fichier rÈÈcrit
+        // Mise √† jour des m√©tadonn√©es
+        meta->tailleEnRecord = i;    // Mettre √† jour le nombre d'enregistrements
+        meta->adress1stBlock = 0;    // Premier bloc du fichier r√©√©crit
 
-        // RÈÈcriture du fichier dans le nouvel espace
-        fseek(ms, 0, SEEK_SET); // Revenir au dÈbut du fichier
-        fwrite(newFileData, sizeof(Student), i, ms); // …crire les nouveaux enregistrements
-        free(newFileData);  // LibÈrer la mÈmoire allouÈe
+        // R√©√©criture du fichier dans le nouvel espace
+        fseek(ms, 0, SEEK_SET); // Revenir au d√©but du fichier
+        fwrite(newFileData, sizeof(Student), i, ms); // √âcrire les nouveaux enregistrements
+        free(newFileData);  // Lib√©rer la m√©moire allou√©e
 
-        inserted = true;  // …tudiant insÈrÈ
+        inserted = true;  // √âtudiant ins√©r√©
     }
 
-    // LibÈration de la mÈmoire tampon
+    // Lib√©ration de la m√©moire tampon
     free(buffer.student);
 }
     }
@@ -653,22 +643,22 @@ void deleteFile(FILE *ms, Disk *D, char fName[20]) {
         return;
     }
 
-    Meta meta = readMeta(ms, *D, pos); // Lecture des mÈtadonnÈes
+    Meta meta = readMeta(ms, *D, pos); // Lecture des m√©tadonn√©es
 
-    // Suppression des blocs allouÈs au fichier
+    // Suppression des blocs allou√©s au fichier
     Block defaultBlock;
-    InitializeBlock(*D, &defaultBlock); // Bloc initialisÈ aux valeurs par dÈfait
+    InitializeBlock(*D, &defaultBlock); // Bloc initialis√© aux valeurs par d√©fait
 
     if (meta.orgGlobal == CONTIG_FILE) {
         printf("Re-initializing blocks (Contiguous organization)...\n");
         for (int i = 0; i < meta.tailleEnBlock; i++) {
-            offset(ms, *D, meta.adress1stBlock + i); // DÈplacer le curseur au bloc spÈcifique
-            // RÈinitialiser le bloc en Ècrivant un bloc vide
+            offset(ms, *D, meta.adress1stBlock + i); // D√©placer le curseur au bloc sp√©cifique
+            // R√©initialiser le bloc en √©crivant un bloc vide
             fwrite(defaultBlock.student, sizeof(Student), D->bf, ms);
             fwrite(&defaultBlock.num, sizeof(int), 1, ms);
             fwrite(&defaultBlock.next, sizeof(int), 1, ms);
 
-            // Mettre ‡ jour la FAT pour libÈrer le bloc
+            // Mettre √† jour la FAT pour lib√©rer le bloc
             Update_FAT(ms, meta.adress1stBlock + i, false);
         }
     } else if (meta.orgGlobal == CHAINED_FILE) {
@@ -680,23 +670,23 @@ void deleteFile(FILE *ms, Disk *D, char fName[20]) {
         while (currentBlock != -1) {
             Display_Block(currentBlock,ms,*D,&buffer);
 
-            // RÈinitialiser le bloc en Ècrivant un bloc vide
+            // R√©initialiser le bloc en √©crivant un bloc vide
             offset(ms, *D, currentBlock);
             fwrite(defaultBlock.student, sizeof(Student), D->bf, ms);
             fwrite(&defaultBlock.num, sizeof(int), 1, ms);
             fwrite(&defaultBlock.next, sizeof(int), 1, ms);
 
-            Update_FAT(ms, currentBlock, false); // Mettre ‡ jour la FAT pour libÈrer le bloc
+            Update_FAT(ms, currentBlock, false); // Mettre √† jour la FAT pour lib√©rer le bloc
             currentBlock = buffer.next; // Passage au bloc suivant
         }
         free(buffer.student);
     }
-    // Suppression des mÈtadonnÈes
+    // Suppression des m√©tadonn√©es
     if (D->nbrFiles > 1 && pos != D->nbrFiles) {
-        Meta lastMeta = readMeta(ms, *D, D->nbrFiles); // Lire la derniËre mÈtadonnÈe
-        lastMeta.position = pos; // Mettre ‡ jour sa position
-        fseek(ms, -(D->nbrFiles - pos + 1) * sizeof(Meta), SEEK_END); // Aller ‡ la position de la mÈtadonnÈe supprimÈe
-        fwrite(&lastMeta, sizeof(Meta), 1, ms); // …crire la derniËre mÈtadonnÈe ‡ la place
+        Meta lastMeta = readMeta(ms, *D, D->nbrFiles); // Lire la derni√®re m√©tadonn√©e
+        lastMeta.position = pos; // Mettre √† jour sa position
+        fseek(ms, -(D->nbrFiles - pos + 1) * sizeof(Meta), SEEK_END); // Aller √† la position de la m√©tadonn√©e supprim√©e
+        fwrite(&lastMeta, sizeof(Meta), 1, ms); // √âcrire la derni√®re m√©tadonn√©e √† la place
     }
 
     D->nbrFiles--; // Diminution du nombre de fichiers par 1
