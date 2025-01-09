@@ -13,3 +13,6 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met);
 void LoadFile(FILE *ms, Disk D, int pos);
 void WriteBlockwPos(FILE * ms,Disk D,Block buffer,int pos);
 void writeblock (FILE *ms,Block buffer ,Disk D);
+
+void compactage(FILE *ms, Disk D);
+

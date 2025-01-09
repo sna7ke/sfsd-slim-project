@@ -176,7 +176,8 @@ void offset (FILE *ms,Disk D, int Block_Number){
 
 
 
-void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode ,Meta * met) {
+void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
+
 
     if (mode == CONTIG_FILE) {
         // Getting the adja�ant blocks from the checkFAT function
@@ -199,8 +200,6 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode ,Meta * met) {
     } else if (mode == CHAINED_FILE) {
         // Recherche des blocs non contigus
         int *positions = checkFAT(ms, D, nbr_blocks, CHAINED_FILE);
-        //we will update the meta data's first block adress
-        met->adress1stBlock=positions[0];
         if (!positions) {
             printf("Not enough space for chained allocation.\n");
             free(positions);
@@ -218,13 +217,15 @@ void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode ,Meta * met) {
                 fseek(ms,sizeof(int),SEEK_CUR);
                 fwrite(&positions[j],sizeof(int),1,ms);
             }
-         }
+        }
+        met->adress1stBlock=positions[0];
 
         printf("Successful chained allocation.\n");
         free(positions);
         return;
     }
 }
+
 void WriteBlockwPos(FILE * ms,Disk D,Block buffer,int pos) {
     offset(ms,D,pos);
     fwrite(buffer.student,sizeof(Student),D.bf,ms);
@@ -239,7 +240,9 @@ void writeblock (FILE *ms,Block buffer ,Disk D){
 }
 
 void LoadFile(FILE *ms, Disk D, int pos) {
+
     // Lire les métadonnées
+
     Meta fMeta;
     int start;
     fMeta = readMeta(ms,D , pos);
@@ -299,4 +302,84 @@ void LoadFile(FILE *ms, Disk D, int pos) {
     printf("Loading Successful.\n");
 }
 
+
+
+void compactage(FILE *ms, Disk D) {
+    Meta mymeta;
+    Block buffer;
+    InitializeBlock(D,&buffer);
+    bool v; bool b = true; bool c = false;
+    int nextFree = 0; // Prochain bloc libre
+    for (int i = 0; i < D.blocks; i++) {
+
+        fseek(ms, sizeof(bool)*i, SEEK_SET);
+        fread(&v, sizeof(bool), 1, ms);
+
+        if ( v == true && i != nextFree) {  // Si le bloc contient un fichier
+            // D�placer le bloc actuel vers la prochaine position libre
+
+            offset(ms, D, i);
+
+            Display_Block(i,ms,D,&buffer);
+
+            //buffer.next = -1;
+            offset(ms, D, nextFree);
+
+
+            fwrite(&buffer.student,sizeof(Student),D.bf,ms);
+            fwrite(&buffer.num,sizeof(int),1,ms);
+            fwrite(&buffer.next,sizeof(int),1,ms);
+
+            Update_FAT( ms, nextFree, b);
+            Update_FAT( ms, i, c);
+
+
+
+            // Mettre � jour les pointeurs pour les fichiers en cours
+           for (int j = 0; j < D.blocks; j++) {
+
+                offset(ms, D, j);
+
+                Display_Block(j,ms,D,&buffer);
+
+
+                if (buffer.next == i) {
+
+
+                    buffer.next = nextFree;
+                    //offset(ms, D, j);
+                   offset(ms, D, j);
+                   fwrite(&buffer.student,sizeof(Student),D.bf,ms);
+                   fwrite(&buffer.num,sizeof(int),1,ms);
+                   fwrite(&buffer.next,sizeof(int),1,ms);
+                }
+            }
+            //here we start
+
+            // Mise � jour des m�tadonn�es
+
+            //fseek(ms, sizeof(Meta) * 0, SEEK_SET); // D�but des m�tadonn�es
+            for (int k = 1; k <= D.nbrFiles; k++) { // MAX_FILES : nombre max de fichiers
+                //fread(&meta, sizeof(Meta), 1, ms);
+                printf("DKHAAAL %d\n ", k);
+                 mymeta = readMeta( ms, D , k);
+                if (mymeta.adress1stBlock == i) { // Si le bloc est le premier
+                    printf("DKHAAAL iffffffffffffffffffff %d\n ", k);
+                    mymeta.adress1stBlock = nextFree;
+
+                    // �crire les m�tadonn�es mises � jour
+                    fseek(ms, -(D.nbrFiles-k+1)*sizeof(Meta), SEEK_END);
+                    fwrite(&mymeta, sizeof(Meta), 1, ms);
+                    mymeta = readMeta( ms, D , k);
+                    printf("sssssssssssssssss %d", mymeta.adress1stBlock);
+                }
+             }
+
+            nextFree++;
+
+        } else if (v == true) {
+            nextFree++;
+        }
+    }
+}
 

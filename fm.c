@@ -63,6 +63,7 @@ Meta meta;
 
         //int nbBlock = (nombreDeRecord/D.bf)+1; //calculer le nombre de block
 
+
         int * space = checkFAT(ms, *D,meta.tailleEnBlock,meta.orgGlobal);
         // meta.adress1stBlock = *space;
         if(space == NULL){
@@ -75,9 +76,21 @@ Meta meta;
 
         Allocate_Block(ms, *D,& meta.tailleEnBlock,&meta.orgGlobal,&meta);
 
-        createMeta(ms, meta); //creer un fichier de metadonnee pour ce fichier
-        D->nbrFiles++;
-        free(space);
+        printf("org global : %d \n",meta.orgGlobal);
+int * space = checkFAT(ms, *D, meta.tailleEnBlock,meta.orgGlobal);
+     // meta.adress1stBlock = *space;
+if(space == NULL){
+    printf("ERREUR f creat !!! \n");
+}
+else{
+
+
+    Allocate_Block(ms, *D, meta.tailleEnBlock,meta.orgGlobal,&meta);
+
+
+    createMeta(ms, meta); //creer un fichier de metadonnee pour ce fichier
+    D->nbrFiles++;
+    free(space);
 }
 }
 
@@ -535,12 +548,19 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
     Student tempStudent = newStudent;        // Étudiant à insérer
 
     // Étape 1 : Vérification si tous les blocs sont pleins (parcours contigu)
+
+    bool inserted = false;                   // Indicateur d'insertion r�ussie
+    Student tempStudent = newStudent;        // �tudiant � ins�rer
+
+    // �tape 1 : V�rification si tous les blocs sont pleins (parcours contigu)
+
     while (currentBlock < meta->tailleEnBlock+ meta->adress1stBlock && !inserted) {
         offset(ms, D, currentBlock);
         Display_Block(currentBlock, ms, D, &buffer);
 
         if (buffer.num < D.bf) {
-            // Si un bloc n'est pas plein, il y a de l'espace pour insérer
+
+           // Si un bloc n'est pas plein, il y a de l'espace pour insérer
             allBlocksFull = false;
             break;  // On peut arrêter la recherche, il suffit de trouver un bloc avec de l'espace
         }
@@ -548,38 +568,47 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
         currentBlock++; // Passer au bloc suivant (organisation contiguë)
     }
 
+
     if (!allBlocksFull) {
-        // Étape 2 : Insertion dans un bloc existant avec un décalage intra-bloc
+        // �tape 2 : Insertion dans un bloc existant avec un d�calage intra-bloc
+
         currentBlock = meta->adress1stBlock; // Revenir au premier bloc
         while (currentBlock < meta->tailleEnBlock && !inserted) {
             offset(ms, D, currentBlock);
             Display_Block(currentBlock, ms, D, &buffer);
 
             if (buffer.num < D.bf) {
+
                 // Le bloc a de l'espace, décaler et insérer
                 int j = buffer.num - 1;
                 // Décalage des enregistrements pour insérer l'étudiant au bon emplacement
                 while (j >= 0 && tempStudent.ID < buffer.student[j].ID) {
                     buffer.student[j + 1] = buffer.student[j]; // Décalage
+
                     j--;
                 }
                 buffer.student[j + 1] = tempStudent; // Insertion
                 buffer.num++;
 
+
                 // Mise à jour du bloc dans la mémoire système
+
                 offset(ms, D, currentBlock);
                 fwrite(buffer.student, sizeof(Student), D.bf, ms);
                 fwrite(&buffer.num, sizeof(int), 1, ms);
                 fwrite(&buffer.next, sizeof(int), 1, ms);
 
+
                 inserted = true; // Étudiant inséré
                 meta->tailleEnRecord++; // Mettre à jour les métadonnées
+
             } else {
                 // Passer au bloc suivant (toujours en contigu)
                 currentBlock++;
             }
         }
     }
+
 
     // Étape 3 : Si tous les blocs sont pleins, réallouer de l'espace
     if (allBlocksFull && currentBlock == meta->tailleEnBlock) {
@@ -594,6 +623,7 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
         Student *newFileData = malloc(sizeof(Student) * D.bf * (meta->tailleEnBlock)); // Allouer de l'espace pour tous les enregistrements, y compris le nouveau bloc
 
         // Copier les étudiants des blocs existants dans le nouvel espace contigu
+=
         currentBlock = meta->adress1stBlock; // Revenir au premier bloc
         int i = 0;  // Compteur pour les enregistrements dans le nouvel espace
         while (currentBlock < meta->tailleEnBlock) {
@@ -601,11 +631,14 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
             Display_Block(currentBlock, ms, D, &buffer);
 
             for (int j = 0; j < buffer.num; j++) {
+
                 newFileData[i++] = buffer.student[j]; // Copier les étudiants
+
             }
 
             currentBlock++;  // Passer au bloc suivant (toujours contigu)
         }
+
 
         // Ajouter le nouvel étudiant à la bonne position dans le nouvel espace
         int j = i - 1;
@@ -629,6 +662,7 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
     }
 
     // Libération de la mémoire tampon
+
     free(buffer.student);
 }
     }
