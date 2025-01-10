@@ -88,6 +88,7 @@ void RechercherFunction() {
 
 void InsererFunction() {
     printf("Inserer function triggered!\n");
+
 }
 
 void SupprimerFunction() {
@@ -115,6 +116,7 @@ int main() {
 
     //declaration back and :
     FILE * ms;
+    Meta meta;
     Disk D;
     bool * b;
     Block buffer;
@@ -177,6 +179,15 @@ int formStep2 = 0; // To track form input step (file name, number of records, et
                 printf("Number of blocks: %d\n", D.blocks);
                 InitializeDisk(ms,D);
                 InitializeBlock(D, &buffer);
+                 for(int i=0;i<D.blocks;i++) {
+        Display_Block(i,ms,D,&buffer);
+        printf("the block number %d : \n",i);
+        for(int j=0;j<D.bf;j++){
+            printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
+        }
+        printf("the next block is %d \n",buffer.next);
+
+    }
                 formStep2=0;
                 currentState = MAIN_MENU;  // Go back to main menu
             }
@@ -199,6 +210,7 @@ int formStep2 = 0; // To track form input step (file name, number of records, et
             }
         } else if (currentState == MEMOIRE_SECONDAIRE_STATE) {
             if (GuiButton((Rectangle){ (screenWidth-300) / 2 , 200, 300, 50 }, "Compacter")) {
+                compactage(ms,D);
                 CompacterFunction();
             }
             if (GuiButton((Rectangle){ screenWidth / 2 - 150, 300, 300, 50 }, "Vider")) {
@@ -211,7 +223,7 @@ int formStep2 = 0; // To track form input step (file name, number of records, et
             }
             if (GuiButton((Rectangle){ screenWidth / 2 - 150, 500, 300, 50 }, "Back")) {
                 BackFunction();
-                currentState = MAIN_MENU;  // Return to main menu
+                currentState = MAIN_MENU;  // Return to main menus
             }
         } else if (currentState == CREATE_FILE) {
             DrawFormStep(formStep, &fileForm, &formSubmitted , screenWidth); // Draw file creation form
@@ -237,13 +249,17 @@ int formStep2 = 0; // To track form input step (file name, number of records, et
 
                 // Add new file to created files list
                 char* newFileName = strdup(fileForm.fileName);
-                insertArray(&createdFiles, &newFileName);
                 Meta m;
                  strcpy(m.nomF, fileForm.fileName);
                 m.tailleEnBlock=fileForm.numberOfRecords;
                 m.orgGlobal=fileForm.organizationGlobaleType;
                 m.orgInterne=fileForm.organizationInterneType;
-                creatFile(ms,&D,&m);
+
+                bool tst =creatFile(ms,&D,&m);
+                if(tst){
+
+                insertArray(&createdFiles, &newFileName);
+                }
 
                 // Add button for the new file in the file menu
                 Rectangle newButton;
@@ -267,14 +283,51 @@ int formStep2 = 0; // To track form input step (file name, number of records, et
 
 
         } else if (currentState == FILE_MENU) {
-            if (GuiButton((Rectangle){ (screenWidth-200) / 2, 200, 200, 50 }, "Rechercher")) { RechercherFunction(); }
-            if (GuiButton((Rectangle){ (screenWidth-200) / 2, 260, 200, 50 }, "Inserer")) { InsererFunction(); }
+            if (GuiButton((Rectangle){ (screenWidth-200) / 2, 200, 200, 50 }, "Rechercher")) { RechercherFunction();
+             int ID=1;
+             printf("enter the students ID :");
+        scanf("%d",&ID);
+            posStudent t1 =  searchStudentID(ms,  D,  meta,  ID) ;
+
+             printf("num block : %d",t1.numBlock);
+             printf("deplacement : %d",t1.deplacement);
+
+            }
+            if (GuiButton((Rectangle){ (screenWidth-200) / 2, 260, 200, 50 }, "Inserer")) { InsererFunction();
+            meta=readMeta(ms,D,1);
+            Student st;
+    for(int i =0;i<3;i++) {
+
+        printf("enter the students name : ");
+        scanf("%s",&st.name);
+        printf("enter the students group :");
+        scanf("%d",&st.group);
+        printf("enter the students ID :");
+        scanf("%d",&st.ID);
+        st.deleted=false;
+
+        insertStudent(ms,D,st,&meta);
+        for(int i=0;i<D.blocks;i++) {
+        Display_Block(i,ms,D,&buffer);
+        printf("the block number %d : \n",i);
+        for(int j=0;j<D.bf;j++){
+            printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
+        }
+        printf("the next block is %d \n",buffer.next);
+
+    }
+
+
+    } }
             if (GuiButton((Rectangle){ (screenWidth-200) / 2, 320, 200, 50 }, "Supprimer")) {
                 int pos =0;
+                char name [20];
             printf("position of file ");
             scanf("%d",&pos);
-                    char *fileName = *(char **)getArrayElement(&createdFiles, pos);
-                //deleteFile(ms,&D,fileName);
+            printf("enter the students name : ");
+        scanf("%s",&name);
+
+                deleteFile(ms,&D,name);
                 currentState = MAIN_MENU;
 
                     SupprimerFunction(); }
