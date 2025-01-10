@@ -20,9 +20,16 @@ int main(void) {
     scanf("%d",&D.blocks);
     D.nbrFiles=0;
     InitializeDisk(ms,D);
+    Meta met;
+    strcpy(met.nomF,"chahi");
+    met.orgGlobal = CONTIG_FILE;
+    met.orgInterne= ORDONE_FILE;
+    met.tailleEnBlock=1;
+    met.tailleEnRecord=0;
 
 
-    creatFile(ms,&D);
+
+    creatFile(ms,&D,&met);
     b=ReadFAT(ms,D.blocks);
        b=ReadFAT(ms,D.blocks);
      for(int i=0;i<D.blocks;i++) {
@@ -65,8 +72,6 @@ int main(void) {
         st.deleted=false;
 
         insertStudent(ms,D,st,&meta);
-
-
     }
 
     for(int i=0;i<D.blocks;i++) {
