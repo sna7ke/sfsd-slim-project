@@ -87,10 +87,6 @@ int fileExists(FILE *ms, Disk D, char fName[20]) {
     // Parcourir toutes les métadonnées pour vérifier si le nom existe déjà
     for (int i =0 ; i <D.nbrFiles ; i++) {
         met=readMeta(ms,D,i+1);
-        printf("this is going to be the name from comparing");
-        printf("%s \n",fName);
-        printf("this is going to be the name from meta");
-        printf("%s \n",met.nomF);
         if( strcmp( met.nomF, fName) == 0) {
             printf("FILE FOUND \n");
             return met.position;
@@ -127,8 +123,14 @@ posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
     posStudent pos;
     pos.numBlock = -1;      // Valeurs par défaut si l'étudiant n'est pas trouvé
     pos.deplacement = -1;
+            posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
+    Block buffer;
+    InitializeBlock(D, &buffer); // Initialisation du buffer
+    posStudent pos;
+    pos.numBlock = -1;      // Valeurs par défaut si l'étudiant n'est pas trouvé
+    pos.deplacement = -1;
     if (meta.orgInterne == ORDONE_FILE) {
-        if (meta.orgGlobal == CONTIG_FILE) {
+            if (meta.orgGlobal == CONTIG_FILE) {
             for (int blockNum = 0; blockNum < meta.tailleEnBlock; blockNum++) {
                 offset(ms, D, meta.adress1stBlock + blockNum); // Aller au bloc nécessaire
                 fread(&buffer.num, sizeof(int), 1, ms); // Lire le nombre de students
@@ -158,6 +160,7 @@ posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
                 currentBlock = buffer.next;
             }
         }
+
     } else if (meta.orgInterne == NONORDONE_FILE) {
             if (meta.orgGlobal == 2) {
                 int i=meta.adress1stBlock;
@@ -190,6 +193,11 @@ posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) {
                 }
             }
     }
+    printf("Étudiant non trouvé.\n");
+    free(buffer.student);
+    return pos; // Retour de la valeur par défaut (-1, -1)
+}
+
     printf("Étudiant non trouvé.\n");
     free(buffer.student);
     return pos; // Retour de la valeur par défaut (-1, -1)
@@ -478,7 +486,6 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
 
                     printf("HELLO?");
                     buffer.student[buffer.num] = newStudent;
-                    buffer.student[buffer.num].deleted = false;
                     buffer.num++;
 
                     buffer.next = -1;
@@ -753,3 +760,306 @@ void deleteFile(FILE *ms, Disk *D, char fName[20]) {
     free(defaultBlock.student);
 }
 
+void deleteStudentLogic(FILE *ms, Disk D,char fName[20], int index, Meta fileMeta) {
+    int filePos = fileExists(ms , D , fName); // Vérifie si le fichier existe
+
+    if (filePos == -1) {
+        printf("Erreur : Fichier non trouvé.\n");
+        return;
+    }
+
+
+    // Recherche du student grace a sa position
+    posStudent pos = searchStudentID(ms , D , fileMeta,index);
+
+
+    Block buffer;
+    Display_Block(pos.numBlock,ms,D,&buffer);
+
+    if (!buffer.student[pos.deplacement].deleted) {
+        buffer.student[pos.deplacement].deleted = true;
+        WriteBlockwPos(ms,D,buffer,pos.numBlock);
+        printf("L'étudiant à l'index %d a été supprimé logiquement.\n", index);
+    } else {
+        printf("L'étudiant à l'index %d est déjà supprimé.\n", index);
+    }
+}
+
+void defragmentFile(FILE *ms, Disk D, Meta *meta) {
+
+    int pos = fileExists(ms, D, meta->nomF);
+    if (pos == -1) {
+        printf("File '%s' does not exist.\n", meta->nomF);
+        return;
+    }
+
+    Block buffer1;
+    Block buffer2;
+
+   InitializeBlock(D,&buffer1);
+   InitializeBlock(D,&buffer2);
+
+    if (meta->orgGlobal == 1 && meta->orgInterne == 2) {
+        int currentBlock = meta->adress1stBlock;
+        while (currentBlock != -1) {
+            Display_Block(currentBlock, ms, D, &buffer1);
+            bool needsUpdate = false;
+
+            for (int i = 0; i < buffer1.num; i++) {
+                if (buffer1.student[i].deleted == 1) {
+                    int lastBlock = meta->adress1stBlock + meta->tailleEnBlock - 1;
+                    bool foundValid = false;
+                    while (lastBlock >= currentBlock && !foundValid) {
+                        Display_Block(lastBlock, ms, D, &buffer2);
+
+                        for (int j = buffer2.num - 1; j >= 0; j--) {
+                            if (buffer2.student[j].deleted == 0) {
+                                // Copier le dernier enregistrement valide
+                                buffer1.student[i] = buffer2.student[j];
+                                foundValid = true;
+                                needsUpdate = true;
+
+                                // Marquer l'original comme initialisé
+                                strcpy(buffer2.student[j].name, "INITIALIZED !");
+                                buffer2.student[j].ID = 0;
+                                buffer2.student[j].group = 0;
+                                buffer2.student[j].deleted = 0;
+
+                                // Réduire le nombre d'enregistrements
+                                buffer2.num--;
+
+                                // Mettre à jour le dernier bloc
+                                WriteBlockwPos(ms, D, buffer2, lastBlock);
+
+                                // Si c'était le dernier enregistrement du bloc
+                                if (buffer2.num == 0) {
+                                    meta->tailleEnBlock--;
+                                }
+                                break;
+                            }
+                        }
+
+                        if (!foundValid) {
+                            lastBlock--;
+                        }
+                    }
+
+                    if (!foundValid) {
+                        // Si aucun enregistrement valide trouvé, initialiser celui-ci
+                        strcpy(buffer1.student[i].name, "INITIALIZED !");
+                        buffer1.student[i].ID = 0;
+                        buffer1.student[i].group = 0;
+                        buffer1.student[i].deleted = 0;
+                        buffer1.num = i;
+                        needsUpdate = true;
+                        break;
+                    }
+                }
+            }
+
+            // Vérifier les doublons et les initialiser
+            for (int i = 0; i < buffer1.num; i++) {
+                for (int j = i + 1; j < buffer1.num; j++) {
+                    if (buffer1.student[i].ID == buffer1.student[j].ID &&
+                        strcmp(buffer1.student[i].name, buffer1.student[j].name) == 0 &&
+                        buffer1.student[i].group == buffer1.student[j].group) {
+                        // Initialiser le doublon
+                        strcpy(buffer1.student[j].name, "INITIALIZED !");
+                        buffer1.student[j].ID = 0;
+                        buffer1.student[j].group = 0;
+                        buffer1.student[j].deleted = 0;
+                        needsUpdate = true;
+                    }
+                }
+            }
+
+            if (needsUpdate) {
+                WriteBlockwPos(ms, D, buffer1, currentBlock);
+            }
+            currentBlock = buffer1.next;
+        }
+
+        // Mise à jour du nombre total d'enregistrements
+        meta->tailleEnRecord = 0;
+        currentBlock = meta->adress1stBlock;
+        while (currentBlock != -1) {
+            Display_Block(currentBlock, ms, D, &buffer1);
+            meta->tailleEnRecord += buffer1.num;
+            currentBlock = buffer1.next;
+        }
+    }
+  else   if (meta->orgGlobal == 1 && meta->orgInterne == 1) {
+        int writePos = meta->adress1stBlock;
+        int currentBlock = meta->adress1stBlock;
+        buffer2.num = 0;
+        int lastWrittenPos = -1;
+
+        int validRecords = 0;
+        while (currentBlock != -1) {
+            Display_Block(currentBlock, ms, D, &buffer1);
+            for (int i = 0; i < buffer1.num; i++) {
+                if (buffer1.student[i].deleted == 0) {
+                    validRecords++;
+                }
+            }
+            currentBlock = buffer1.next;
+        }
+
+        // Reset for actual defragmentation
+        currentBlock = meta->adress1stBlock;
+        buffer2.num = 0;
+        writePos = meta->adress1stBlock;
+
+        // Calculate needed blocks
+        int neededBlocks = (validRecords + D.bf - 1) / D.bf;
+        while (currentBlock != -1) {
+            Display_Block(currentBlock, ms, D, &buffer1);
+            for (int i = 0; i < buffer1.num; i++) {
+                if (buffer1.student[i].deleted == 0) {
+                    buffer2.student[buffer2.num] = buffer1.student[i];
+                    buffer2.num++;
+                    if (buffer2.num == D.bf) {
+                        buffer2.next = (writePos < meta->adress1stBlock + neededBlocks - 1) ? writePos + 1 : -1;
+                        WriteBlockwPos(ms, D, buffer2, writePos);
+                        lastWrittenPos = writePos;
+                        writePos++;
+                        buffer2.num = 0;
+                    }
+                }
+            }
+            currentBlock = buffer1.next;
+        }
+
+        if (buffer2.num > 0) {
+            // Initialize just the last element
+            strcpy(buffer2.student[D.bf - 1].name, "INITIALIZED !");
+            buffer2.student[D.bf - 1].ID = 0;
+            buffer2.student[D.bf - 1].group = 0;
+            buffer2.student[D.bf - 1].deleted = 0;
+
+            buffer2.next = -1;
+            WriteBlockwPos(ms, D, buffer2, writePos);
+            lastWrittenPos = writePos;
+            writePos++;
+        }
+
+        for (int i = writePos; i < meta->adress1stBlock + meta->tailleEnBlock; i++) {
+            InitializeBlock(D, &buffer1);
+            buffer1.next = -1;
+            WriteBlockwPos(ms, D, buffer1, i);
+        }
+
+        meta->tailleEnBlock = writePos - meta->adress1stBlock;
+        meta->tailleEnRecord = validRecords;
+    } else if ( meta->orgGlobal == CONTIG_FILE ) {
+        Block buffer;
+        InitializeBlock(D, &buffer);
+
+        // Temporary block to store non-deleted records
+        Block tempBlock;
+        InitializeBlock(D, &tempBlock);
+
+        int totalRecords = 0;
+        int currentBlock = meta->adress1stBlock;
+
+        // First pass: collect all non-deleted records
+        for (int i = 0; i < meta->tailleEnBlock; i++) {
+            offset(ms, D, currentBlock + i);
+            Display_Block(currentBlock + i, ms, D, &buffer);
+
+            for (int j = 0; j < buffer.num; j++) {
+                if (!buffer.student[j].deleted) {
+
+                    // Copy non-deleted student to temp block
+                    tempBlock.student[tempBlock.num] = buffer.student[j];
+                    tempBlock.num++;
+                    totalRecords++;
+
+                    // If temp block is full, start a new one
+                    if (tempBlock.num == D.bf) {
+                        offset(ms, D, currentBlock + (totalRecords-1)/D.bf);
+                        writeblock(ms, tempBlock, D);
+                        tempBlock.num = 0;
+                    }
+
+
+                }
+            }
+        }
+
+        // Write the last partial block if it exists
+        if (tempBlock.num > 0) {
+            offset(ms, D, currentBlock + (totalRecords-1)/D.bf);
+            writeblock(ms, tempBlock, D);
+        }
+
+        // Calculate new number of blocks needed
+        int newBlockCount = (totalRecords + D.bf - 1) / D.bf;
+
+        // If ordered, we need to sort the records
+        if (meta->orgInterne == ORDONE_FILE) {
+            Student *allStudents = malloc(sizeof(Student) * totalRecords);
+            int studentIndex = 0;
+
+            // Read all records into array
+            for (int i = 0; i < newBlockCount; i++) {
+                offset(ms, D, currentBlock + i);
+                Display_Block(currentBlock + i, ms, D, &buffer);
+
+                for (int j = 0; j < buffer.num; j++) {
+                    allStudents[studentIndex++] = buffer.student[j];
+                }
+            }
+
+            // Bubble Sort by ID
+            for (int i = 0; i < totalRecords - 1; i++) {
+                for (int j = 0; j < totalRecords - i - 1; j++) {
+                    if (allStudents[j].ID > allStudents[j + 1].ID) {
+                        Student temp = allStudents[j];
+                        allStudents[j] = allStudents[j + 1];
+                        allStudents[j + 1] = temp;
+                    }
+                }
+            }
+
+            // Write back sorted records
+            tempBlock.num = 0;
+            for (int i = 0; i < totalRecords; i++) {
+                tempBlock.student[tempBlock.num++] = allStudents[i];
+
+                if (tempBlock.num == D.bf || i == totalRecords - 1) {
+                    offset(ms, D, currentBlock + i/D.bf);
+                    writeblock(ms, tempBlock, D);
+                    tempBlock.num = 0;
+                }
+            }
+
+            free(allStudents);
+        }
+
+        // Clear any remaining blocks if we're using fewer blocks now
+        Block emptyBlock;
+        InitializeBlock(D, &emptyBlock);
+        for (int i = newBlockCount; i < meta->tailleEnBlock; i++) {
+            offset(ms, D, currentBlock + i);
+            writeblock(ms, emptyBlock, D);
+            Update_FAT(ms, currentBlock + i, false);  // Mark block as free in FAT
+        }
+
+        // Update metadata
+        meta->tailleEnRecord = totalRecords;
+        meta->tailleEnBlock = newBlockCount;
+        majmeta(ms, D, *meta, meta->position);
+
+        // Cleanup
+        free(buffer.student);
+        free(tempBlock.student);
+        free(emptyBlock.student);
+
+        printf("Defragmentation complete. Removed all logically deleted records.\n");
+        printf("New record count: %d\n", totalRecords);
+        printf("New block count: %d\n", newBlockCount);
+    }
+    free(buffer1.student);
+    free(buffer2.student);
+}

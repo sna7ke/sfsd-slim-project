@@ -68,18 +68,6 @@ bool * ReadFAT (FILE *ms,int n) { // this function will read the file allocation
 
 }
 
-/*Block Display_Block(int Block_Number,FILE*ms,Disk D) {
-    Block buffer;
-    rewind(ms);
-    fseek(ms,sizeof(bool)*D.blocks,SEEK_SET);
-    //this moves the cursor to the end of the file allocation table then we would start reading the blocks bellow it
-    fseek(ms,sizeof(Block)*Block_Number,SEEK_CUR);
-    //this moves the cursor to the desired block
-    fread(&buffer,sizeof(Block),1,ms);
-    return buffer;
-
-}*/
-
 void Display_Block(int Block_Number,FILE*ms,Disk D,Block * buffer) {
     rewind(ms);
     //fseek(ms,sizeof(bool)*D.blocks,SEEK_SET);
@@ -168,13 +156,10 @@ int * checkFAT(FILE *ms, Disk D, int blocsFile,int Mode){ //blocsFile nombre de 
     return NULL;
 }
 
-
 void offset (FILE *ms,Disk D, int Block_Number){
     fseek(ms,sizeof(bool)*D.blocks,SEEK_SET);
     fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_CUR);
 }
-
-
 
 void Allocate_Block(FILE *ms, Disk D, int nbr_blocks, int mode,Meta * met) {
 
@@ -301,8 +286,6 @@ void LoadFile(FILE *ms, Disk D, int pos) {
     free(buffer.student);
     printf("Loading Successful.\n");
 }
-
-
 
 void compactage(FILE *ms, Disk D) {
     Meta mymeta;

@@ -7,4 +7,5 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta);
 void deleteFile(FILE *ms, Disk * D, char fName[20]) ;
 int binarySearch(Student *students, int numRecords, int ID) ;
 posStudent searchStudentID(FILE *ms, Disk D, Meta meta, int ID) ;
-
+void deleteStudentLogic(FILE *ms, Disk D,char fName[20], int index, Meta fileMeta);
+void defragmentFile(FILE *ms, Disk D, Meta *meta);
