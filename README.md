@@ -1,3 +1,13 @@
+## structure of the project :
+- fm.c : contains the functions that handle the file handling logic.
+- ms.c: contains the functions that handle the secondary memory handling logic.
+- md.c : contains the functions that handle the meta data handling logic.
+- util.h : contains the structures and utilities we used in the project.
+- main.c : contains only the test of some functionalities, the project is finished but we didn't link all the functions together.
+- maininterface.c : contains the source code for the GUI written in c with the raygui library (a graphical library written in C) but it is not finished.
+- inlcude/lib folders : contains the raylib/raygui files that are needed to use the library.
+- raylib.exe: the executable of maininterface.c, it isn't finished and the functions aren't linked.
+
 ## OUR NAMES+USERNAMES : (Our full names are in the PROJET SFSD FILE GIVEN)
 - BELABDELOUAHAB Farouk Benyoucef : FaroukBel22
 - SAHEB Yacine : yacinesaheb
@@ -53,12 +63,3 @@
 - [x] **Test du code dans les cas d'erreurs / disque plein / fragmentation etc...**;
 - [x] **Réécriture du fichier README.**
 - [x] **Ecriture du rapport** : *(Dans un fichier word probablement)* Résultats des tests avec screenshots / Nom + Prénom + Matricule.
-
-
-### 6.Fichiers .c and executables :
-- maininterface.c : RAYGUI interface, most buttons work, the insert button redirect you to the console to fill the infos, defrag button is missing.
-- raylib.exe : Executable of the maininterface.c , uses raylib and raygui.h (graphical lib written in c).
-- main.c : the main that we tested basically everything with. We let only the base function tests to it.
-- main.exe : Executable of main.c that tests the main functions of our program, such as createfile , deletefile , insertFile, fileexists...
-- TerminalUI.c : The terminal of our program. This is a replacement to the GUI interface, so plaese use with this if you want to test our full program.
-- TerminalUI.exe : Executable of TerminalUI.c.

@@ -1,7 +1,5 @@
 #include "ms.h"
 
-//TODO : create function to allocate blocks on the ms and test it
-// TODO : test the Empty_MS function once you allocate blocks to see if the ms gets empty or not
 
 void InitializeDisk(FILE *ms ,Disk D){
 
@@ -70,9 +68,6 @@ bool * ReadFAT (FILE *ms,int n) { // this function will read the file allocation
 
 void Display_Block(int Block_Number,FILE*ms,Disk D,Block * buffer) {
     rewind(ms);
-    //fseek(ms,sizeof(bool)*D.blocks,SEEK_SET);
-    //this moves the cursor to the end of the file allocation table then we would start reading the blocks bellow it
-    //fseek(ms,(sizeof(Student)*D.bf+(sizeof(int)*2))*Block_Number,SEEK_CUR);
     offset(ms,D,Block_Number);
     //this moves the cursor to the desired block
     fread(buffer->student,sizeof(Student),D.bf,ms);
@@ -137,7 +132,6 @@ int * checkFAT(FILE *ms, Disk D, int blocsFile,int Mode){ //blocsFile nombre de 
             }
         }
     else if(Mode==CHAINED_FILE) {
-            printf("CHAINED \n");
             int k=0;
             Position = malloc(sizeof(int)*blocsFile); //we allocate an array enough to hold all blocks
         for(int i=0;i<D.blocks;i++){
@@ -343,18 +337,17 @@ void compactage(FILE *ms, Disk D) {
 
             //fseek(ms, sizeof(Meta) * 0, SEEK_SET); // D�but des m�tadonn�es
             for (int k = 1; k <= D.nbrFiles; k++) { // MAX_FILES : nombre max de fichiers
-                //fread(&meta, sizeof(Meta), 1, ms);
-                printf("DKHAAAL %d\n ", k);
+               
                  mymeta = readMeta( ms, D , k);
                 if (mymeta.adress1stBlock == i) { // Si le bloc est le premier
-                    printf("DKHAAAL iffffffffffffffffffff %d\n ", k);
+                    
                     mymeta.adress1stBlock = nextFree;
 
                     // �crire les m�tadonn�es mises � jour
                     fseek(ms, -(D.nbrFiles-k+1)*sizeof(Meta), SEEK_END);
                     fwrite(&mymeta, sizeof(Meta), 1, ms);
                     mymeta = readMeta( ms, D , k);
-                    printf("sssssssssssssssss %d", mymeta.adress1stBlock);
+                  
                 }
              }
 
@@ -365,4 +358,3 @@ void compactage(FILE *ms, Disk D) {
         }
     }
 }
-

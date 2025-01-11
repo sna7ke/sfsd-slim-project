@@ -61,12 +61,10 @@ Meta meta;
     // position du fichier
     meta.position=D->nbrFiles+1;
 
-        //int nbBlock = (nombreDeRecord/D.bf)+1; //calculer le nombre de block
     int * space = checkFAT(ms, *D, meta.tailleEnBlock,meta.orgGlobal);
-        // meta.adress1stBlock = *space;
 
     if(space == NULL){
-        printf("ERREUR f creat !!! \n");
+        printf("ERREUR cannot find space to allocate the file !!! \n");
         return false;
     }
     else{
@@ -77,7 +75,7 @@ Meta meta;
 
     createMeta(ms, meta); //creer un fichier de metadonnee pour ce fichier
     D->nbrFiles++;
-   // free(space);
+   free(space);
     return true;
 }
 }
@@ -217,20 +215,20 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
                 offset(ms, D, i);
                 Display_Block(i,ms,D,&buffer);
 
-                //printf("stuck azbi \n");
+
 
                 if (buffer.num < D.bf){ // si il ya de place
 
                     buffer.student[buffer.num] = newStudent;
                     buffer.num++;
-                    offset(ms, D, i); // fseek(ms, -sizeof(Block), SEEK_CUR);
+                    offset(ms, D, i); 
 
                     fwrite(buffer.student,sizeof(Student),D.bf,ms);
                     fwrite(&buffer.num,sizeof(int),1,ms);
                     fwrite(&buffer.next,sizeof(int),1,ms);
 
                     meta->tailleEnRecord++;
-                   // meta->tailleEnBlock++;
+                   
 
                     return; //break
                 }
@@ -253,32 +251,24 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
             return;
             }
 
-            //trying to fix this shit
+            
             buffer.next= *i2;
             offset(ms,D,i);
             writeblock(ms,buffer,D);
 
-            //offset(ms, D, *i2);
+            
 
             Display_Block(*i2,ms,D,&buffer);
 
-            /*fseek(ms, -sizeof(Block), SEEK_CUR);
-            fwrite(buffer.student,sizeof(Student),D.bf,ms);
-            fwrite(&buffer.num,sizeof(int),1,ms);
-            fwrite(&buffer.next,sizeof(int),1,ms);*/
 
 
             Update_FAT(ms, *i2, true);
 
-            //meta->tailleEnBlock++;
-
             // fill new student
 
 
-            //InitializeBlock(D, &buffer);
             buffer.student[0] = newStudent;
 
-            /*buffer.student[0].deleted = false;*/
 
             buffer.num = 1;
             buffer.next = -1;
@@ -549,7 +539,7 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
         Display_Block(currentBlock, ms, D, &buffer);
 
         if (buffer.num < D.bf) {
-                printf("omg it happened for the block \n");
+                
         printf("%d",currentBlock);
 
            // Si un bloc n'est pas plein, il y a de l'espace pour insérer
@@ -562,7 +552,7 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
 
 
     if (!allBlocksFull) {
-            printf("WAZAAAAAAAAA\n");
+           
         // �tape 2 : Insertion dans un bloc existant avec un d�calage intra-bloc
 
         currentBlock = meta->adress1stBlock; // Revenir au premier bloc
@@ -580,7 +570,7 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
 
                     j--;
                 }
-                //printf("this is the value of j %d: \n",j);
+                
                 buffer.student[j + 1] = tempStudent; // Insertion
                 buffer.num++;
 
@@ -624,7 +614,7 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
         Update_FAT(ms,newblock,true);
         Display_Block(newblock,ms,D,&TempBlock);
         TempBlock.num=1;
-        //riteBlockwPos(ms,D,buffer,newblock);
+        
         offset(ms,D,newblock);
         writeblock(ms,TempBlock,D);
 
@@ -647,10 +637,7 @@ void insertStudent(FILE *ms, Disk D, Student newStudent, Meta *meta) {
 
             currentBlock++;  // Passer au bloc suivant (toujours contigu)
         }
-        /*printf("the i index : %d \n",i);
-        printf("%s\n",newFileData[i].name);
-        printf("%d\n",newFileData[i].ID);
-        printf("%d\n",newFileData[i].group);*/
+      
         // Ajouter le nouvel étudiant à la bonne position dans le nouvel espace
         int j = i - 1;
         while (j >= 0 && tempStudent.ID < newFileData[j].ID) {

@@ -21,10 +21,15 @@ int main(void) {
     D.nbrFiles=0;
     InitializeDisk(ms,D);
     Meta met;
-    strcpy(met.nomF,"chahi");
-    met.orgGlobal = CONTIG_FILE;
-    met.orgInterne= ORDONE_FILE;
-    met.tailleEnBlock=1;
+
+    printf("enter the name of the file\n");
+    scanf("%s",&met.nomF);
+    printf("enter the global organization : 1. CHAINED , 2.CONTIGUOUS \n");
+    scanf("%d",&met.orgGlobal);
+    printf("enter the internal organization : 1.ORDONNEE ,2.NON ORDONEE \n");
+    scanf("%d",&met.orgInterne);
+    printf("how many blocks do you wish to initialize your file with? \n");
+    scanf("%d",&met.tailleEnRecord);
     met.tailleEnRecord=0;
 
 
@@ -32,6 +37,7 @@ int main(void) {
     creatFile(ms,&D,&met);
     b=ReadFAT(ms,D.blocks);
        b=ReadFAT(ms,D.blocks);
+       printf("state of the secondary memory : \n");
      for(int i=0;i<D.blocks;i++) {
         printf("block number %d is : %d\n",i,b[i]);
     }
@@ -40,7 +46,7 @@ int main(void) {
 
 
 
-    printf("Nom du fichier : %s\n", meta.nomF);
+    printf("\n Nom du fichier : %s\n", meta.nomF);
     printf("Taille en blocs : %d\n", meta.tailleEnBlock);
     printf("Taille en enregistrements : %d\n", meta.tailleEnRecord);
 
@@ -62,7 +68,11 @@ int main(void) {
 
     }
     Student st;
-    for(int i =0;i<3;i++) {
+
+    printf("how many students do you wish to insert ? \n");
+    int num;
+    scanf("%d",&num);
+    for(int i =0;i<num;i++) {
         printf("enter the students name : ");
         scanf("%s",&st.name);
         printf("enter the students group :");
@@ -83,64 +93,15 @@ int main(void) {
         printf("the next block is %d \n",buffer.next);
 
     }
+    char name[20];
+    printf("enter the name of the file you wish to delete : \n");
+    scanf(" %s",name);
 
-    fileExists(ms,D,"chahi");
+    fileExists(ms,D,name);
     printf("exist \n");
-    deleteFile(ms,&D,"chahi");
+    deleteFile(ms,&D,name);
     printf("deletes");
-    fileExists(ms,D,"chahi");
-
-
-
-    //Update_FAT(ms,1,true);
-
-
-
-
-
-    /*for(int i=0;i<D.blocks;i++) {
-        printf("block number %d is : %d",i,b[i]);
-    }
-    printf(" \n");
-    Metajour(ms,1);
-    */
-
-
-    /*int * Position=NULL;
-    Position=checkFAT(ms,D,2,CHAINED_FILE);
-    printf("%p \n",Position);
-    if(Position==NULL){
-        printf("it works \n");
-    }*/
-
-    //this prints the values after a contiguous allocation
-
-    //else {
-        /*for(int i=0;i<2;i++) {
-        printf("block number %d is : %d\n",*Position+i,b[i+*Position]);
-    }*/
-   /* Allocate_Block(ms,D,2,CHAINED_FILE);
-
-    b=ReadFAT(ms,D.blocks);
-
-    for(int i=0;i<D.blocks;i++) {
-        printf("block number %d is : %d\n",i,b[i]);
-    }
-        for (int i=0;i<2;i++) {
-        printf("the block : %d is : %d \n",Position[i],b[Position[i]]);
-        }
-
-         for(int i=0;i<D.blocks;i++) {
-        Display_Block(i,ms,D,&buffer);
-        printf("the block number %d : \n",i);
-        for(int j=0;j<D.bf;j++){
-            printf("   name : %s  ID : %d group : %d deleted ? : %d \n",buffer.student[j].name,buffer.student[j].ID,buffer.student[j].group,buffer.student[j].deleted);
-        }
-        printf("the next block is %d \n",buffer.next);
-
-    }
-
-    }*/
+    fileExists(ms,D,name);
 
     free(b);
     fclose(ms);
