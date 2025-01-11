@@ -1,3 +1,10 @@
+## OUR NAMES+USERNAMES : (Our full names are in the PROJET SFSD FILE GIVEN)
+- BELABDELOUAHAB Farouk Benyoucef : FaroukBel22
+- SAHEB Yacine : yacinesaheb
+- RIZOU Adem : ademrzz
+- AIT MEZIANE El Moataz Bellah Amir : sna7ke
+- CHETTAB Abderrahmane : INFRAbderrahmane
+
 ## TO DO LIST :
 
 ### 1.Mémoire secondaire MS :
@@ -46,3 +53,12 @@
 - [x] **Test du code dans les cas d'erreurs / disque plein / fragmentation etc...**;
 - [x] **Réécriture du fichier README.**
 - [x] **Ecriture du rapport** : *(Dans un fichier word probablement)* Résultats des tests avec screenshots / Nom + Prénom + Matricule.
+
+
+### 6.Fichiers .c and executables :
+- maininterface.c : RAYGUI interface, most buttons work, the insert button redirect you to the console to fill the infos, defrag button is missing.
+- raylib.exe : Executable of the maininterface.c , uses raylib and raygui.h (graphical lib written in c).
+- main.c : the main that we tested basically everything with. We let only the base function tests to it.
+- main.exe : Executable of main.c that tests the main functions of our program, such as createfile , deletefile , insertFile, fileexists...
+- TerminalUI.c : The terminal of our program. This is a replacement to the GUI interface, so plaese use with this if you want to test our full program.
+- TerminalUI.exe : Executable of TerminalUI.c.
