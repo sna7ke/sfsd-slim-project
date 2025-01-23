@@ -10,7 +10,7 @@ int main(void) {
     Block buffer;
     ms=fopen("SecondaryMemory.bin","wb+");
     if(ms==NULL){
-            printf("wow");
+            printf("ERROR \n");
         return 0;
     }
     printf("give me the info to initialize the disk \n");
@@ -36,11 +36,18 @@ int main(void) {
 
     creatFile(ms,&D,&met);
     b=ReadFAT(ms,D.blocks);
-       b=ReadFAT(ms,D.blocks);
+       //b=ReadFAT(ms,D.blocks);
+       printf("\n");
        printf("state of the secondary memory : \n");
+
      for(int i=0;i<D.blocks;i++) {
-        printf("block number %d is : %d\n",i,b[i]);
-    }
+        if( b[i] == true){
+            printf("block number %d is : not empty \n",i);
+        }else if(b[i] == false){
+            printf("block number %d is : empty \n",i);
+        } else{
+        printf("ERROR \n");
+     }}
 
     meta=readMeta(ms,D,1);
 
@@ -57,6 +64,19 @@ int main(void) {
     printf("first block is : %d \n",meta.adress1stBlock);
 
     InitializeBlock(D,&buffer);
+
+    b=ReadFAT(ms,D.blocks);
+    printf("\n");
+       printf("state of the secondary memory : \n");
+
+     for(int i=0;i<D.blocks;i++) {
+        if( b[i] == true){
+            printf("block number %d is : not empty \n",i);
+        }else if(b[i] == false){
+            printf("block number %d is : empty \n",i);
+        } else{
+        printf("ERROR \n");
+     }}
 
     for(int i=0;i<D.blocks;i++) {
         Display_Block(i,ms,D,&buffer);
@@ -84,6 +104,20 @@ int main(void) {
         insertStudent(ms,D,st,&meta);
     }
 
+    b=ReadFAT(ms,D.blocks);
+       //b=ReadFAT(ms,D.blocks);
+       printf("\n");
+       printf("state of the secondary memory : \n");
+
+     for(int i=0;i<D.blocks;i++) {
+        if( b[i] == true){
+            printf("block number %d is : not empty \n",i);
+        }else if(b[i] == false){
+            printf("block number %d is : empty \n",i);
+        } else{
+        printf("ERROR \n");
+     }}
+
     for(int i=0;i<D.blocks;i++) {
         Display_Block(i,ms,D,&buffer);
         printf("the block number %d : \n",i);
@@ -101,7 +135,41 @@ int main(void) {
     printf("exist \n");
     deleteFile(ms,&D,name);
     printf("deletes");
-    fileExists(ms,D,name);
+    //fileExists(ms,D,name);
+
+    Update_FAT(ms, 1, true);
+    Update_FAT(ms, 3, true);
+
+    b=ReadFAT(ms,D.blocks);
+       //b=ReadFAT(ms,D.blocks);
+       printf("\n");
+       printf("state of the secondary memory BEFORE COMPACTAGE : \n");
+
+     for(int i=0;i<D.blocks;i++) {
+        if( b[i] == true){
+            printf("block number %d is : not empty \n",i);
+        }else if(b[i] == false){
+            printf("block number %d is : empty \n",i);
+        } else{
+        printf("ERROR \n");
+     }}
+
+     printf("TESTER COMPACTAGE \n");
+     compactage(ms, D);
+
+     b=ReadFAT(ms,D.blocks);
+       //b=ReadFAT(ms,D.blocks);
+       printf("\n");
+       printf("state of the secondary memory AFTER COMPACTAGE : \n");
+
+     for(int i=0;i<D.blocks;i++) {
+        if( b[i] == true){
+            printf("block number %d is : not empty \n",i);
+        }else if(b[i] == false){
+            printf("block number %d is : empty \n",i);
+        } else{
+        printf("ERROR \n");
+     }}
 
     free(b);
     fclose(ms);
